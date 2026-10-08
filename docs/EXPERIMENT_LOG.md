@@ -518,3 +518,25 @@ VRAM đỉnh 174 MiB mọi cấu hình. Kiểm chéo: VP 100%; lK baseline 96,3%
 
 ### 18.4 Kết luận và hạn chế
 **Chưa đưa vào pipeline.** Kỹ thuật đo được "tay xa vị trí lái" khi có hiệu chuẩn theo camera, nhưng chưa chứng minh được "cả hai tay rời" vì không có dữ liệu nhãn đúng. Cần: (a) tập/video có nhãn tay trên-rời vô lăng (ví dụ quay cabin thật, hoặc dữ liệu có nhãn hands-on-wheel như Drive&Act, DMD khi xin được quyền), (b) vùng vô lăng hiệu chuẩn theo từng camera. Hạn chế: nhãn gần đúng, split c0 không có id người (có thể rò rỉ cùng người giữa hai nửa), camera bên hông, một video sanity.
+
+
+## 19. Thí nghiệm 12 (EXP-012): MAR theo pha và luật "ngáp rồi nhắm mắt" (Codex viết, Claude duyệt)
+
+### 19.1 Thiết lập
+Học từ bốn repo mã nguồn mở về giám sát tài xế (drivesafe, DrowsinessGuard, PseudoKush, Minor-Project; đọc mã nguồn, không chạy). MAR của DriverGuard đã chuẩn hóa (3 khoảng dọc môi trong / khoảng ngang khóe miệng, 8 điểm MediaPipe) và dùng cùng nhóm điểm môi trong với DrowsinessGuard, nên không đổi công thức. Hai việc: (A) `scripts/eval_mar_phases.py` thống kê MAR theo pha trên `live_session_2.json` và `live_session_3.json`; (B) luật ngữ cảnh sau cờ `use_yawn_context` (mặc định TẮT): MAR vượt ngưỡng mở cửa sổ 5 s, sau khi miệng khép (MAR ≤ ngưỡng) thời lượng nhắm mắt cần để báo giảm từ 1,8 s xuống 0,8 s. Lúc miệng còn mở, `suppress_eyes` vẫn chặn tín hiệu mắt như cũ.
+
+### 19.2 Kết quả
+| Nhóm | Khung có mặt | MAR p50 | Tối đa | Khung > 0,40 |
+|---|---:|---:|---:|---:|
+| Ngáp, phiên 2 | 34 | 0,163 | 0,317 | 0% |
+| Ngáp, phiên 3 | 80 | 0,646 | 0,965 | 75% |
+| Không ngáp, gộp | 2.032 | 0,016 | 0,882 | 0,3% |
+
+Replay có/không cờ giống hệt nhau: phiên 2 là 3/9 pha, phiên 3 là 9/9 (`docs/experiments/mar_phases/replay_compare.txt`). `pytest ai` 59 passed (56 + 3 test mới).
+
+### 19.3 Kết luận và hạn chế
+1. Ngưỡng 0,40 tách tốt ngáp rõ khỏi các pha còn lại, nhưng không bắt được ngáp yếu (phiên 2, MAR tối đa 0,317). Sót ở EXP-006 là do ngáp yếu của người thử, không phải lỗi công thức. Giữ ngưỡng 0,40.
+2. Có điểm MAR cao ở pha không ngáp (phiên 2: rest2 tối đa 0,882, rest3 11,8% khung > 0,40). Các pha này nằm sát pha quay đầu nên nghi nhiễu landmark khi mặt bị che một phần; chưa kiểm hình ảnh.
+3. Luật ngữ cảnh KHÔNG đổi kết quả vì hai phiên không có ca nhắm mắt ngắn ngay sau ngáp. Chưa chứng minh có ích; cờ giữ TẮT.
+4. Replay phiên 2 ra 3/9 pha đúng trong khi mục 13 ghi 4/9, và báo giả phiên 3 là 0 trong khi mục 14 ghi 1 (rest9): cách chấm của script replay khác scorer cũ; chưa đối soát từng pha.
+5. Dữ liệu chỉ một người, hai lần ngáp. Việc tiếp: quay phiên có "ngáp rồi nhắm mắt khoảng 1 s" và ngáp yếu/vừa để đánh giá luật.

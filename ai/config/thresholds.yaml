@@ -17,3 +17,6 @@ use_pose_fallback: true    # BẬT theo lệnh sếp 2026-10-07 (EXP-008/010); p
 pose_yaw_ratio: 0.35       # độ lệch ngang mũi / bề rộng vai
 pose_pitch_ratio: 0.30     # độ lệch dọc mũi / bề rộng vai (cúi đầu tăng)
 pose_max_age_s: 0.6        # bỏ qua kết quả suy luận pose cũ hơn mức này
+use_yawn_context: false    # EXP-012: luật ngáp rồi nhắm mắt, tắt mặc định
+yawn_context_window_s: 5.0
+yawn_context_eye_s: 0.8    # thời lượng nhắm mắt sau ngáp; mặc định mắt là 1.8 s

@@ -24,6 +24,11 @@ def main() -> None:
         action="store_true",
         help="Bật fallback pose cho lần phát lại này.",
     )
+    parser.add_argument(
+        "--yawn-context",
+        action="store_true",
+        help="Bật luật ngáp rồi nhắm mắt cho lần phát lại này.",
+    )
     args = parser.parse_args()
 
     with args.session.open(encoding="utf-8") as source:
@@ -40,12 +45,14 @@ def main() -> None:
 
     th = load_thresholds()
     th.use_pose_fallback = args.pose_fallback
+    th.use_yawn_context = args.yawn_context
     print(
         "ngưỡng: ear_fallback", th.ear_threshold,
         "| mar", th.mar_threshold,
         "| yaw", th.yaw_threshold,
         "| pitch", th.pitch_threshold,
         "| pose_fallback", th.use_pose_fallback,
+        "| yawn_context", th.use_yawn_context,
     )
     pipe = DriverPipeline(th)
     start = bounds[0][1]

@@ -66,6 +66,7 @@ class DriverPipeline:
         self.eye_buffer = TimedBuffer(max_age_s=t.perclos_window_s)
         self._closed_samples: deque[tuple[float, bool]] = deque()
         self._yawns: deque[float] = deque()
+        self._last_yawn_context_time: float | None = None
         self._prev: dict[str, AlertState] = {}
         self._last_chronic = -1e9
         self._mute_until = 0.0
@@ -129,6 +130,10 @@ class DriverPipeline:
         eye_closed_now = False
         if face is not None:
             ear, mar, yaw, pitch, roll = face.ear, face.mar, face.yaw, face.pitch, face.roll
+            if mar > t.mar_threshold:
+                # Ghi cả MAR vượt ngưỡng trước khi YAWNING đạt ACTIVE. Khi miệng còn mở,
+                # suppress_eyes bên dưới vẫn chặn tín hiệu mắt như trước.
+                self._last_yawn_context_time = now
             pitch_signed = pitch * t.pitch_sign
             was_calibrated = self.calibrator.is_calibrated
             if not was_calibrated:
@@ -182,6 +187,19 @@ class DriverPipeline:
             # Có điện thoại ở vùng sử dụng => tài xế vẫn ở đó (tay che mặt), không báo vắng mặt
             "DRIVER_ABSENCE": not has_face and not recent_away and not pose_presence and not phone.usage_candidate,
         }
+        recent_yawn_context = (
+            t.use_yawn_context
+            and self._last_yawn_context_time is not None
+            and 0.0 <= now - self._last_yawn_context_time <= t.yawn_context_window_s
+        )
+        # Chỉ áp dụng ngưỡng mắt ngắn sau khi miệng đã khép: lúc MAR cao, mắt
+        # vẫn bị suppress_eyes và không thể kích hoạt DROWSINESS_ACUTE.
+        eye_duration_s = (
+            t.yawn_context_eye_s
+            if recent_yawn_context and has_face and mar <= t.mar_threshold
+            else t.eyes_closed_s
+        )
+        self.eyes_fsm.duration_s = eye_duration_s
         fsms = {
             "DROWSINESS_ACUTE": self.eyes_fsm,
             "YAWNING": self.yawn_fsm,
@@ -206,6 +224,7 @@ class DriverPipeline:
         for name in newly:
             if name == "YAWNING":
                 self._yawns.append(now)
+                self._last_yawn_context_time = now
         while self._yawns and self._yawns[0] < now - t.yawn_window_s:
             self._yawns.popleft()
 
@@ -237,7 +256,7 @@ class DriverPipeline:
             }
 
         reasons = {
-            "DROWSINESS_ACUTE": ("Nhắm mắt kéo dài", t.eyes_closed_s),
+            "DROWSINESS_ACUTE": ("Nhắm mắt kéo dài", eye_duration_s),
             "LOOKING_AWAY": ("Quay đầu lệch hướng lái", t.head_s),
             "LOOKING_DOWN": ("Cúi đầu kéo dài", t.head_s),
             "PHONE_USAGE": ("Dùng điện thoại gần vùng mặt", t.phone_s),

@@ -157,6 +157,36 @@ def test_yawning_suppresses_closed_eyes():
     assert "DROWSINESS_ACUTE" not in event_types(res)
 
 
+def test_yawn_context_off_keeps_default_eye_duration():
+    pipe = DriverPipeline(Thresholds(use_yawn_context=False))
+    run(pipe, 0.0, 5.0, lambda t: face(yaw=10.0, pitch=-5.0))
+    run(pipe, 5.1, 2.2, lambda t: face(mar=0.45, yaw=10.0, pitch=-5.0))
+    res = run(pipe, 7.4, 1.0, lambda t: face(ear=0.10, yaw=10.0, pitch=-5.0))
+    assert pipe.eyes_fsm.duration_s == 1.8
+    assert "DROWSINESS_ACUTE" not in event_types(res)
+
+
+def test_yawn_then_short_eye_closure_triggers_with_context():
+    pipe = DriverPipeline(
+        Thresholds(use_yawn_context=True, yawn_context_window_s=5.0, yawn_context_eye_s=0.8)
+    )
+    run(pipe, 0.0, 5.0, lambda t: face(yaw=10.0, pitch=-5.0))
+    yawn = run(pipe, 5.1, 2.2, lambda t: face(mar=0.45, yaw=10.0, pitch=-5.0))
+    assert any(telemetry["yawning"] for _, telemetry, _ in yawn)
+    closed = run(pipe, 7.4, 1.0, lambda t: face(ear=0.10, yaw=10.0, pitch=-5.0))
+    assert "DROWSINESS_ACUTE" in event_types(closed)
+    event = next(e for e in (e for _, _, ev in closed for e in ev) if e["event_type"] == "DROWSINESS_ACUTE")
+    assert event["duration_ms"] == 800
+
+
+def test_short_eye_closure_without_recent_yawn_does_not_trigger_with_context():
+    pipe = DriverPipeline(Thresholds(use_yawn_context=True))
+    run(pipe, 0.0, 5.0, lambda t: face(yaw=10.0, pitch=-5.0))
+    res = run(pipe, 5.1, 1.0, lambda t: face(ear=0.10, yaw=10.0, pitch=-5.0))
+    assert "DROWSINESS_ACUTE" not in event_types(res)
+    assert pipe.eyes_fsm.duration_s == 1.8
+
+
 def test_lost_face_after_large_turn_counts_as_looking_away():
     pipe = calibrated_pipe()
     run(pipe, 5.1, 1.0, lambda t: face(yaw=55.0, pitch=-5.0))

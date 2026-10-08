@@ -1,0 +1,50 @@
+So sánh replay cùng dữ liệu, cùng pipeline; chỉ khác use_yawn_context.
+Pose fallback tắt như ở lệnh replay mặc định. Báo giả đếm event warning sau 2 giây đầu mỗi pha không mục tiêu.
+Độ trễ tính từ mốc pha đến cờ/event khớp đầu tiên; các pha lặp cùng tên được tính riêng.
+
+## live_session_2
+
+| Cấu hình | Pha đúng | Báo giả | Độ trễ trung vị |
+|---|---:|---:|---:|
+| Tắt cờ | 3/9 | 1 | 2.99 s |
+| Bật cờ | 3/9 | 1 | 2.99 s |
+
+| Pha mục tiêu | Tắt cờ | Trễ | Bật cờ | Trễ | Δ trễ (bật − tắt) |
+|---|---:|---:|---:|---:|---:|
+| eyes_closed#1 | đúng | 3.24 s | đúng | 3.24 s | 0.00 s |
+| look_left#1 | sót | — | sót | — | — |
+| look_left#2 | sót | — | sót | — | — |
+| look_right#1 | sót | — | sót | — | — |
+| look_right#2 | sót | — | sót | — | — |
+| look_down#1 | sót | — | sót | — | — |
+| yawn#1 | sót | — | sót | — | — |
+| phone#1 | đúng | 2.96 s | đúng | 2.96 s | 0.00 s |
+| phone_near_face#1 | đúng | 2.99 s | đúng | 2.99 s | 0.00 s |
+
+## live_session_3
+
+| Cấu hình | Pha đúng | Báo giả | Độ trễ trung vị |
+|---|---:|---:|---:|
+| Tắt cờ | 9/9 | 0 | 3.80 s |
+| Bật cờ | 9/9 | 0 | 3.80 s |
+
+| Pha mục tiêu | Tắt cờ | Trễ | Bật cờ | Trễ | Δ trễ (bật − tắt) |
+|---|---:|---:|---:|---:|---:|
+| eyes_closed#1 | đúng | 3.54 s | đúng | 3.54 s | 0.00 s |
+| look_left#1 | đúng | 3.80 s | đúng | 3.80 s | 0.00 s |
+| look_left#2 | đúng | 7.06 s | đúng | 7.06 s | 0.00 s |
+| look_right#1 | đúng | 3.89 s | đúng | 3.89 s | 0.00 s |
+| look_right#2 | đúng | 3.94 s | đúng | 3.94 s | 0.00 s |
+| look_down#1 | đúng | 6.37 s | đúng | 6.37 s | 0.00 s |
+| yawn#1 | đúng | 3.75 s | đúng | 3.75 s | 0.00 s |
+| phone#1 | đúng | 0.29 s | đúng | 0.29 s | 0.00 s |
+| phone_near_face#1 | đúng | 0.01 s | đúng | 0.01 s | 0.00 s |
+
+## Gộp hai phiên
+
+| Cấu hình | Pha đúng | Báo giả | Độ trễ trung vị |
+|---|---:|---:|---:|
+| Tắt cờ | 12/18 | 1 | 3.64 s |
+| Bật cờ | 12/18 | 1 | 3.64 s |
+
+Hai phiên không có pha nhắm mắt ngắn ngay sau ngáp, nên replay không kiểm chứng được lợi ích của luật trong tình huống mục tiêu. Chúng chỉ cho biết luật có làm thay đổi nhãn và báo giả trong các bản ghi này hay không.
