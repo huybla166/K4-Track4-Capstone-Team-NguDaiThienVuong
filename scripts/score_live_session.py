@@ -23,6 +23,8 @@ EXPECTED = {
     "look_right": ({"LOOKING_AWAY"}, ("looking_away",)),
     "look_down": ({"LOOKING_DOWN"}, ("looking_down",)),
     "yawn": ({"YAWNING"}, ("yawning",)),
+    "yawn_close": ({"YAWNING"}, ("yawning",)),
+    "yawn_weak": ({"YAWNING"}, ("yawning",)),
     "phone": ({"PHONE_USAGE"}, ("phone_detected", "phone_usage")),
     "phone_near_face": ({"PHONE_USAGE"}, ("phone_detected", "phone_usage")),
 }
@@ -41,6 +43,15 @@ CSV_FIELDS = (
     "do_tre_b_s",
     "ti_le_co_b_pct",
     "bao_gia_b",
+    "yawn_close_yawning_detected",
+    "yawn_close_yawning_latency_s",
+    "yawn_close_acute_detected",
+    "yawn_close_acute_latency_s",
+    "yawn_weak_yawning_detected",
+    "yawn_weak_yawning_latency_s",
+    "eyes_short_acute_detected",
+    "eyes_short_acute_latency_s",
+    "eyes_short_acute_false_alarm_frames",
 )
 
 
@@ -90,6 +101,16 @@ def percent(numerator, denominator):
     return (100.0 * numerator / denominator) if denominator else None
 
 
+def matching_signal_times(frames, event, flag=None):
+    times = []
+    for frame in frames:
+        if event in frame_events(frame) or (flag and flag_on(frame, flag)):
+            stamp = as_time(frame.get("t"))
+            if stamp is not None:
+                times.append(stamp)
+    return times
+
+
 def score_session(data):
     frames = []
     for frame in data.get("frames", data.get("telemetry", [])) or []:
@@ -131,6 +152,40 @@ def score_session(data):
         latency_b = None
         flag_pct = None
         flag_pct_b = None
+        custom_metrics = {
+            "yawn_close_yawning_detected": None,
+            "yawn_close_yawning_latency_s": None,
+            "yawn_close_acute_detected": None,
+            "yawn_close_acute_latency_s": None,
+            "yawn_weak_yawning_detected": None,
+            "yawn_weak_yawning_latency_s": None,
+            "eyes_short_acute_detected": None,
+            "eyes_short_acute_latency_s": None,
+            "eyes_short_acute_false_alarm_frames": None,
+        }
+
+        if phase == "yawn_close":
+            yawn_times = matching_signal_times(phase_frames, "YAWNING", "yawning")
+            acute_times = matching_signal_times(phase_frames, "DROWSINESS_ACUTE")
+            custom_metrics.update(
+                yawn_close_yawning_detected=bool(yawn_times),
+                yawn_close_yawning_latency_s=max(0.0, min(yawn_times) - start) if yawn_times else None,
+                yawn_close_acute_detected=bool(acute_times),
+                yawn_close_acute_latency_s=max(0.0, min(acute_times) - start) if acute_times else None,
+            )
+        elif phase == "yawn_weak":
+            yawn_times = matching_signal_times(phase_frames, "YAWNING", "yawning")
+            custom_metrics.update(
+                yawn_weak_yawning_detected=bool(yawn_times),
+                yawn_weak_yawning_latency_s=max(0.0, min(yawn_times) - start) if yawn_times else None,
+            )
+        elif phase == "eyes_short":
+            acute_times = matching_signal_times(phase_frames, "DROWSINESS_ACUTE")
+            custom_metrics.update(
+                eyes_short_acute_detected=bool(acute_times),
+                eyes_short_acute_latency_s=max(0.0, min(acute_times) - start) if acute_times else None,
+                eyes_short_acute_false_alarm_frames=len(acute_times),
+            )
 
         if is_expected:
             expected_events, flag_names = EXPECTED[phase]
@@ -164,8 +219,9 @@ def score_session(data):
             display_phase = f"{phase} ({occurrences[phase]})"
         else:
             display_phase = phase
+            false_alarm_events = {"DROWSINESS_ACUTE"} if phase == "eyes_short" else WARNING_EVENTS
             for frame in phase_frames:
-                event_count = len(frame_events(frame) & WARNING_EVENTS)
+                event_count = len(frame_events(frame) & false_alarm_events)
                 stamp = as_time(frame.get("t"))
                 if stamp is None:
                     continue
@@ -203,6 +259,7 @@ def score_session(data):
                     any(flag_on(frame, name) for name in EXPECTED[phase][1]) for frame in hold_frames
                 ) if is_expected else 0,
                 "face_frame_count": sum(flag_on(frame, "face_detected") for frame in phase_frames),
+                **custom_metrics,
             }
         )
 
@@ -308,6 +365,36 @@ def print_report(data, rows, summary, csv_path):
     )
     print(f"CSV: {csv_path}")
 
+    yawn_close_rows = [row for row in rows if row.get("phase_id") == "yawn_close"]
+    yawn_weak_rows = [row for row in rows if row.get("phase_id") == "yawn_weak"]
+    eyes_short_rows = [row for row in rows if row.get("phase_id") == "eyes_short"]
+    if yawn_close_rows or yawn_weak_rows or eyes_short_rows:
+        print("Đánh giá riêng các pha EXP-014:")
+        if yawn_close_rows:
+            yawn_detected = sum(row["yawn_close_yawning_detected"] is True for row in yawn_close_rows)
+            acute_detected = sum(row["yawn_close_acute_detected"] is True for row in yawn_close_rows)
+            acute_latencies = [
+                row["yawn_close_acute_latency_s"]
+                for row in yawn_close_rows
+                if row["yawn_close_acute_latency_s"] is not None
+            ]
+            acute_median = statistics.median(acute_latencies) if acute_latencies else None
+            print(
+                f"  yawn_close: YAWNING {yawn_detected}/{len(yawn_close_rows)}; "
+                f"DROWSINESS_ACUTE {acute_detected}/{len(yawn_close_rows)}, "
+                f"độ trễ trung vị {format_seconds(acute_median)} s."
+            )
+        if yawn_weak_rows:
+            yawn_detected = sum(row["yawn_weak_yawning_detected"] is True for row in yawn_weak_rows)
+            print(f"  yawn_weak: YAWNING {yawn_detected}/{len(yawn_weak_rows)}.")
+        if eyes_short_rows:
+            acute_false_phases = sum(row["eyes_short_acute_detected"] is True for row in eyes_short_rows)
+            acute_false_frames = sum(row["eyes_short_acute_false_alarm_frames"] for row in eyes_short_rows)
+            print(
+                f"  eyes_short: DROWSINESS_ACUTE báo giả ở {acute_false_phases}/{len(eyes_short_rows)} "
+                f"pha ({acute_false_frames} bản tin có cờ/sự kiện)."
+            )
+
 
 def write_csv(rows, path):
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -316,10 +403,27 @@ def write_csv(rows, path):
         writer.writeheader()
         for row in rows:
             csv_row = {key: row.get(key) for key in CSV_FIELDS}
-            for key in ("phat_hien_dung", "phat_hien_dung_b"):
+            for key in (
+                "phat_hien_dung",
+                "phat_hien_dung_b",
+                "yawn_close_yawning_detected",
+                "yawn_close_acute_detected",
+                "yawn_weak_yawning_detected",
+                "eyes_short_acute_detected",
+            ):
                 if isinstance(csv_row[key], bool):
                     csv_row[key] = "có" if csv_row[key] else "không"
-            for key in ("do_tre_s", "ti_le_co_pct", "thay_mat_pct", "do_tre_b_s", "ti_le_co_b_pct"):
+            for key in (
+                "do_tre_s",
+                "ti_le_co_pct",
+                "thay_mat_pct",
+                "do_tre_b_s",
+                "ti_le_co_b_pct",
+                "yawn_close_yawning_latency_s",
+                "yawn_close_acute_latency_s",
+                "yawn_weak_yawning_latency_s",
+                "eyes_short_acute_latency_s",
+            ):
                 value = csv_row[key]
                 if value is not None:
                     csv_row[key] = f"{value:.3f}"

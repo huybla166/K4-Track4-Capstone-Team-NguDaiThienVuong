@@ -540,3 +540,28 @@ Replay có/không cờ giống hệt nhau: phiên 2 là 3/9 pha, phiên 3 là 9/
 3. Luật ngữ cảnh KHÔNG đổi kết quả vì hai phiên không có ca nhắm mắt ngắn ngay sau ngáp. Chưa chứng minh có ích; cờ giữ TẮT.
 4. Replay phiên 2 ra 3/9 pha đúng trong khi mục 13 ghi 4/9, và báo giả phiên 3 là 0 trong khi mục 14 ghi 1 (rest9): cách chấm của script replay khác scorer cũ; chưa đối soát từng pha.
 5. Dữ liệu chỉ một người, hai lần ngáp. Việc tiếp: quay phiên có "ngáp rồi nhắm mắt khoảng 1 s" và ngáp yếu/vừa để đánh giá luật.
+
+
+## 20. Thí nghiệm 13 (EXP-014): phiên người thật lần 4, "ngáp rồi nhắm mắt" (Codex viết profile/scorer, Claude phân tích)
+
+### 20.1 Thiết lập
+`live_session.py --profile yawn_close` (109 s, cờ pose bật, `use_yawn_context` tắt khi ghi): 4 lần "ngáp to rồi nhắm mắt ~1 s", 2 lần ngáp nhẹ, 2 lần chỉ nhắm mắt ~1 s không ngáp (đối chứng). Một người (sếp), camera laptop. Dữ liệu: `docs/experiments/live_session_4.json/.csv`. Phát lại cùng pipeline với cờ tắt (A) và bật (B) bằng `tasks/EXP-014/analyze_per_instance.py` (tách từng lần lặp; bảng replay theo tên pha gộp các pha trùng tên nên không dùng được).
+
+### 20.2 Kết quả
+Chấm tự động (cờ tắt): 4/6 pha đúng, 0 báo giả; YAWNING 4/4 ở ngáp to, 0/2 ở ngáp nhẹ; DROWSINESS_ACUTE 2/4 ở ngáp to; đối chứng eyes_short 0/2 báo giả.
+
+| Lần | MAR max | EAR min | A: DROWSINESS_ACUTE (s từ đầu pha) | B (bật luật) |
+|---|---:|---:|---|---|
+| yawn_close #1 | 0,98 | 0,12 | không | không |
+| yawn_close #2 | 1,11 | 0,09 | không | **6,5** |
+| yawn_close #3 | 1,08 | 0,06 | 6,2 | **5,2** (sớm 1,0) |
+| yawn_close #4 | 0,98 | 0,05 | 5,8 | **4,8** (sớm 1,0) |
+| yawn_weak #1/#2 | 0,58 / 0,53 | 0,12 / 0,11 | không | không |
+| rest_yc #6 (sau yawn_weak #2) | 0,41 | 0,09 | không | **1,0** |
+| eyes_short #1/#2 | 0,02 / 0,03 | 0,04 / 0,06 | không | không |
+
+### 20.3 Kết luận và hạn chế
+1. Có tín hiệu tích cực: luật bắt thêm 1 ca ngáp to sót (#2) và báo sớm 1,0 s ở 2 ca còn lại. Đối chứng eyes_short (nhắm mắt không ngáp) không bị báo ở cả A và B: luật không kích hoạt khi không có ngáp trước.
+2. Có 1 lần B báo mà A không ở rest_yc #6 ngay sau ngáp nhẹ (MAR 0,41, EAR min 0,09 < ngưỡng nhắm mắt 0,148). Không có ảnh/video để biết người thử có thật sự nhắm mắt: nghi báo giả CHƯA loại trừ.
+3. Ngáp nhẹ (MAR 0,53-0,58 > 0,40) vẫn không thành YAWNING, vì FSM cần giữ đủ lâu; không liên quan luật.
+4. Mẫu rất nhỏ (4 ngáp to, 1 người); phiên không ghi hình nên không đối chiếu bằng mắt. Không đủ để bật cờ. `use_yawn_context` giữ TẮT. Việc tiếp: lặp lại với người thứ hai và ghi hình (hoặc chụp khung) để kiểm rest_yc #6; cân nhắc thêm kiểm "nhắm mắt ngắn trong cửa sổ 5 s sau ngáp" như bài kiểm báo giả.

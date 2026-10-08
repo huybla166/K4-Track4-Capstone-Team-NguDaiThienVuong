@@ -45,13 +45,36 @@ STEPS = [
     ("phone_near_face", "Đưa điện thoại lên NGANG MẶT như đang nhắn tin, mắt nhìn vào điện thoại (giữ yên đến khi hết giờ)", 7),
     ("end", "Xong! Cảm ơn sếp", 1),
 ]
+YAWN_CLOSE_STEPS = [
+    ("baseline", "Ngồi tự nhiên, nhìn thẳng màn hình", 10),
+    ("yawn_close", "NGÁP thật to (2-3 s), rồi NGAY LẬP TỨC NHẮM MẮT khoảng 1 giây rồi mở mắt, giữ yên đến hết giờ", 8),
+    ("rest_yc", "Nhìn thẳng, khép miệng và nghỉ", 4),
+    ("yawn_close", "NGÁP thật to (2-3 s), rồi NGAY LẬP TỨC NHẮM MẮT khoảng 1 giây rồi mở mắt, giữ yên đến hết giờ", 8),
+    ("rest_yc", "Nhìn thẳng, khép miệng và nghỉ", 4),
+    ("yawn_close", "NGÁP thật to (2-3 s), rồi NGAY LẬP TỨC NHẮM MẮT khoảng 1 giây rồi mở mắt, giữ yên đến hết giờ", 8),
+    ("rest_yc", "Nhìn thẳng, khép miệng và nghỉ", 4),
+    ("yawn_close", "NGÁP thật to (2-3 s), rồi NGAY LẬP TỨC NHẮM MẮT khoảng 1 giây rồi mở mắt, giữ yên đến hết giờ", 8),
+    ("rest_yc", "Nhìn thẳng, khép miệng và nghỉ", 4),
+    ("yawn_weak", "Ngáp NHẸ, miệng mở vừa, không che miệng", 7),
+    ("rest_yc", "Nhìn thẳng, khép miệng và nghỉ", 4),
+    ("yawn_weak", "Ngáp NHẸ, miệng mở vừa, không che miệng", 7),
+    ("rest_yc", "Nhìn thẳng, khép miệng và nghỉ", 4),
+    ("eyes_short", "Chỉ NHẮM MẮT khoảng 1 giây rồi mở, KHÔNG ngáp, lặp lại 2 lần", 7),
+    ("rest_yc", "Nhìn thẳng, khép miệng và nghỉ", 4),
+    ("eyes_short", "Chỉ NHẮM MẮT khoảng 1 giây rồi mở, KHÔNG ngáp, lặp lại 2 lần", 7),
+    ("rest_yc", "Nhìn thẳng, khép miệng và nghỉ", 4),
+    ("end", "Xong! Cảm ơn sếp", 1),
+]
 COUNTDOWN_SECONDS = 3
 CALIBRATION_SECONDS = 4
-SESSION_SECONDS = (
-    sum(seconds for phase, _, seconds in STEPS if phase != "end")
-    + COUNTDOWN_SECONDS
-    + CALIBRATION_SECONDS
-)
+
+
+def session_seconds(steps):
+    return (
+        sum(seconds for phase, _, seconds in steps if phase != "end")
+        + COUNTDOWN_SECONDS
+        + CALIBRATION_SECONDS
+    )
 
 marks: list[dict] = []
 frames: list[dict] = []
@@ -102,8 +125,8 @@ class Handler(BaseHTTPRequestHandler):
             done.set()
             self._send(b"ok")
         else:
-            page = PAGE.replace("__STEPS__", json.dumps(STEPS, ensure_ascii=False))
-            page = page.replace("__SESSION_SECONDS__", str(SESSION_SECONDS))
+            page = PAGE.replace("__STEPS__", json.dumps(self.server.steps, ensure_ascii=False))
+            page = page.replace("__SESSION_SECONDS__", str(self.server.session_seconds))
             page = page.replace("__COUNTDOWN_SECONDS__", str(COUNTDOWN_SECONDS))
             page = page.replace("__CALIBRATION_SECONDS__", str(CALIBRATION_SECONDS))
             body = page.encode("utf-8")
@@ -169,11 +192,19 @@ def parse_args():
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT, help="Tệp JSON đầu ra (mặc định: docs/experiments/live_session.json).")
     parser.add_argument("--label", help="Nhãn phiên thử được ghi vào JSON.")
     parser.add_argument("--force", action="store_true", help="Cho phép ghi đè tệp đích đã tồn tại.")
+    parser.add_argument(
+        "--profile",
+        choices=("standard", "yawn_close"),
+        default="standard",
+        help="Kịch bản phiên (mặc định: standard, giữ nguyên STEPS cũ).",
+    )
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
+    steps = YAWN_CLOSE_STEPS if args.profile == "yawn_close" else STEPS
+    duration = session_seconds(steps)
     target = args.out if args.out.is_absolute() else ROOT / args.out
     target = target.resolve()
     if target.exists() and not args.force:
@@ -181,7 +212,16 @@ def main():
 
     target.parent.mkdir(parents=True, exist_ok=True)
     srv = HTTPServer(("127.0.0.1", PORT), Handler)
+    srv.steps = steps
+    srv.session_seconds = duration
     threading.Thread(target=srv.serve_forever, daemon=True).start()
+    planned_steps = sum(seconds for phase, _, seconds in steps if phase != "end")
+    print(
+        f"Profile {args.profile}: tổng {duration} giây theo STEPS "
+        f"({planned_steps} giây pha + {COUNTDOWN_SECONDS} giây đếm ngược + "
+        f"{CALIBRATION_SECONDS} giây hiệu chuẩn).",
+        flush=True,
+    )
     print(f"Mở http://localhost:{PORT}/ và bấm Bắt đầu", flush=True)
     try:
         asyncio.run(collect())
@@ -189,8 +229,9 @@ def main():
             raise RuntimeError(f"Không hiệu chuẩn được; không ghi phiên thử. {calibration_error or ''}")
         result = {
             "label": args.label,
+            "profile": args.profile,
             "calibrate_t": calibrate_t,
-            "steps": STEPS,
+            "steps": steps,
             "marks": marks,
             "frames": frames,
         }
