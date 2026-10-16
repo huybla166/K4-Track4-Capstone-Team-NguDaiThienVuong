@@ -1,0 +1,338 @@
+.drive-page {
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+}
+
+.drive-content {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 8px 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Khung lái: canvas phủ kín, các lớp HUD/hộp thoại đè lên */
+.drive-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: calc(100dvh - 170px);
+  min-height: 420px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: #121314;
+  user-select: none;
+}
+
+.drive-stage:fullscreen {
+  max-height: none;
+  width: 100vw;
+  height: 100dvh;
+  border-radius: 0;
+}
+
+.drive-stage.is-crash::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(197, 34, 31, 0.45);
+  pointer-events: none;
+}
+
+.drive-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.drive-hud {
+  position: absolute;
+  top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: rgba(18, 19, 20, 0.62);
+  color: #f1f1ee;
+  pointer-events: none;
+}
+
+.drive-hud-left { left: 12px; }
+.drive-hud-right { right: 12px; align-items: flex-end; }
+
+.drive-speed {
+  font-size: 36px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.drive-unit,
+.drive-meta {
+  font-size: 13px;
+  color: #c9cbd0;
+}
+
+.drive-tag {
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.drive-tag-warn { background: var(--warn-solid); color: var(--warn-ink); }
+.drive-tag-danger { background: var(--danger-solid); color: #ffffff; }
+
+.drive-level {
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.drive-level-normal { background: var(--ok); color: #ffffff; }
+.drive-level-warning { background: var(--warn-solid); color: var(--warn-ink); }
+.drive-level-danger { background: var(--danger-solid); color: #ffffff; }
+.drive-level-off { background: #3c3e44; color: #c9cbd0; }
+
+/* Cảnh báo DriverGuard: giữa phía trên, chữ lớn để đọc trong một cái liếc */
+.drive-alert {
+  position: absolute;
+  top: 22%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  max-width: calc(100% - 32px);
+  padding: 12px 24px;
+  border-radius: var(--radius);
+  text-align: center;
+  pointer-events: none;
+}
+
+.drive-alert strong { font-size: 28px; font-weight: 700; }
+.drive-alert span { font-size: 16px; font-weight: 500; }
+.drive-alert-warning { background: var(--warn-solid); color: var(--warn-ink); }
+.drive-alert-danger { background: var(--danger-solid); color: #ffffff; }
+
+/* Camera DriverGuard: viền theo mức rủi ro, chú thích là lý do cảnh báo hiện tại */
+.drive-cam {
+  margin: 0;
+  overflow: hidden;
+  border: 3px solid #3c3e44;
+  border-radius: var(--radius);
+  background: #121314;
+  color: #f1f1ee;
+}
+
+.drive-cam-pip {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  width: min(30%, 340px);
+}
+
+.drive-cam-inline {
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto 12px;
+}
+
+.drive-cam-normal { border-color: var(--ok); }
+.drive-cam-warning { border-color: var(--warn-solid); }
+.drive-cam-danger { border-color: var(--danger-solid); }
+
+.drive-cam-frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 3;
+  background: #000000;
+}
+
+.drive-cam-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.drive-cam-empty { font-size: 13px; color: #c9cbd0; }
+
+.drive-cam figcaption {
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.drive-cam-warning figcaption { background: var(--warn-solid); color: var(--warn-ink); }
+.drive-cam-danger figcaption { background: var(--danger-solid); color: #ffffff; }
+
+.drive-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(18, 19, 20, 0.55);
+}
+
+.drive-overlay-soft { background: rgba(18, 19, 20, 0.3); }
+
+.drive-card {
+  width: 100%;
+  max-width: 560px;
+  max-height: 100%;
+  overflow: auto;
+  padding: 24px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.drive-card-small { max-width: 380px; }
+.drive-result { max-width: 760px; }
+
+.drive-card h2 {
+  margin: 0 0 8px;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.drive-card h3 {
+  margin: 20px 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.drive-card p { margin: 0 0 12px; line-height: 1.5; }
+
+.drive-keys {
+  margin: 0 0 12px;
+  padding-left: 20px;
+  line-height: 1.9;
+}
+
+kbd {
+  display: inline-block;
+  min-width: 24px;
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font: inherit;
+  font-size: 13px;
+  text-align: center;
+}
+
+.drive-note { color: var(--text-muted); font-size: 14px; }
+
+.drive-warn {
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  background: var(--warn-bg);
+  color: var(--warn);
+  font-size: 14px;
+}
+
+.drive-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-top: 8px;
+}
+
+.drive-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.drive-count {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 32px;
+  border-radius: var(--radius-lg);
+  background: rgba(18, 19, 20, 0.7);
+  color: #f1f1ee;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.drive-count-num { font-size: 64px; font-weight: 600; line-height: 1; }
+
+.drive-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px 24px;
+  margin: 12px 0 0;
+}
+
+.drive-stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.drive-stats dt { color: var(--text-muted); font-size: 13px; }
+.drive-stats dd { margin: 0; font-size: 17px; font-weight: 600; }
+
+.drive-table {
+  width: 100%;
+  margin-bottom: 12px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.drive-table th,
+.drive-table td {
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.drive-table th { color: var(--text-muted); font-weight: 500; }
+.drive-ok { color: var(--ok); font-weight: 500; }
+.drive-miss { color: var(--danger); font-weight: 600; }
+
+.drive-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.drive-caption {
+  margin: 0 0 0 auto;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .drive-content { padding: 8px 16px 24px; }
+  .drive-stage { aspect-ratio: auto; height: 70dvh; }
+  .drive-speed { font-size: 28px; }
+  .drive-alert strong { font-size: 22px; }
+  .drive-cam-pip { width: 42%; }
+  .drive-caption { margin-left: 0; }
+}
