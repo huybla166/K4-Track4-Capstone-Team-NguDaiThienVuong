@@ -36,8 +36,8 @@ export function CalibrationRing({ faceDetected = true }: CalibrationRingProps) {
     };
   }, [faceDetected]);
 
-  const size = 120;
-  const strokeWidth = 4;
+  const size = 168;
+  const strokeWidth = 6;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (progress / 100) * circumference;
@@ -49,9 +49,9 @@ export function CalibrationRing({ faceDetected = true }: CalibrationRingProps) {
       role="dialog"
       aria-modal="true"
       aria-label="Hiệu chuẩn tư thế"
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 p-6 text-center select-none"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[var(--bg)] text-[var(--text)] p-6 text-center select-none"
     >
-      <div className="flex flex-col items-center max-w-sm w-full">
+      <div className="flex flex-col items-center max-w-md w-full app-pop">
         {faceDetected ? (
           <>
             <div
@@ -69,7 +69,7 @@ export function CalibrationRing({ faceDetected = true }: CalibrationRingProps) {
                   cx={size / 2}
                   cy={size / 2}
                   r={radius}
-                  stroke="var(--border)"
+                  stroke="var(--surface-2)"
                   strokeWidth={strokeWidth}
                   fill="transparent"
                 />
@@ -82,24 +82,34 @@ export function CalibrationRing({ faceDetected = true }: CalibrationRingProps) {
                   fill="transparent"
                   strokeDasharray={circumference}
                   strokeDashoffset={strokeDashoffset}
-                  strokeLinecap="round"
                 />
               </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-[20px] font-semibold text-white tabular-nums">
-                  {isCompleted ? "" : `${secondsRemaining}s`}
-                </span>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                {!isCompleted && (
+                  <>
+                    <span className="text-[48px] leading-none font-semibold tabular-nums">{secondsRemaining}</span>
+                    <span className="text-[14px] text-[var(--text-muted)] mt-1">giây</span>
+                  </>
+                )}
               </div>
             </div>
 
-            <h2 className="text-[28px] font-semibold text-white mt-6 tracking-tight">
+            <h2 className="text-[clamp(28px,4vw,40px)] font-semibold mt-8 tracking-tight">
               {isCompleted ? "Đang hoàn tất…" : "Nhìn thẳng phía trước"}
             </h2>
+            <p className="text-[16px] text-[var(--text-muted)] mt-3">
+              Giữ yên đầu để DriverGuard lấy tư thế chuẩn của bạn.
+            </p>
           </>
         ) : (
-          <h2 className="text-[28px] font-semibold text-white tracking-tight">
-            Không thấy khuôn mặt
-          </h2>
+          <>
+            <h2 className="text-[clamp(28px,4vw,40px)] font-semibold tracking-tight">
+              Không thấy khuôn mặt
+            </h2>
+            <p className="text-[16px] text-[var(--text-muted)] mt-3">
+              Ngồi vào giữa khung hình camera.
+            </p>
+          </>
         )}
       </div>
     </div>

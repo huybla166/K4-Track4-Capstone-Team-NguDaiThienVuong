@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { DriverEvent, RiskLevel } from "@/types/telemetry";
-import { eventNames, LevelMark } from "./monitor-ui";
+import type { DriverEvent } from "@/types/telemetry";
+import { eventNames, LevelMark, toLevel } from "./monitor-ui";
 
 export function EventDrawer({ event, onClose }: { event: DriverEvent; onClose: () => void }) {
   const dialog = useRef<HTMLElement>(null);
@@ -22,19 +22,25 @@ export function EventDrawer({ event, onClose }: { event: DriverEvent; onClose: (
     document.addEventListener("keydown", handle);
     return () => { document.removeEventListener("keydown", handle); previous?.focus(); };
   }, [onClose]);
-  const level: RiskLevel = event.risk_level === "DANGER" ? "DANGER" : event.risk_level === "WARNING" ? "WARNING" : "NORMAL";
+  const level = toLevel(event.risk_level);
   const fields = [
     ["Thời điểm", new Date(event.started_at).toLocaleString("vi-VN")],
-    ["Thời lượng", `${(event.duration_ms / 1000).toFixed(1)} giây`],
+    ["Thời lượng", `${(event.duration_ms / 1000).toFixed(1).replace(".", ",")} giây`],
     ["Điểm rủi ro", event.risk_score.toFixed(0)],
     ["Độ tin cậy", `${(event.confidence * 100).toFixed(0)}%`],
     ["Nguyên nhân", event.reason || "Chưa có mô tả nguyên nhân."],
   ];
-  return <div className="fixed inset-0 z-50 flex justify-end bg-black/70" onMouseDown={(mouse) => { if (mouse.target === mouse.currentTarget) onClose(); }}>
-    <aside ref={dialog} role="dialog" aria-modal="true" aria-labelledby="event-title" className="h-full w-full max-w-md overflow-y-auto border-l border-[var(--border,#d9d9d4)] bg-[var(--surface,#fff)] p-6 text-[var(--text,#1a1a18)]">
-      <div className="flex items-start justify-between gap-4"><div><p className="text-sm text-[var(--text-muted,#5c5c57)]">Chi tiết sự kiện</p><h2 id="event-title" className="mt-1 text-xl font-semibold">{eventNames[event.event_type] ?? event.event_type}</h2></div><button ref={close} type="button" onClick={onClose} aria-label="Đóng chi tiết sự kiện" className="monitor-button">Đóng</button></div>
-      <div className="mt-6 border-b border-[var(--border,#d9d9d4)] pb-4"><p className="text-sm text-[var(--text-muted,#5c5c57)]">Mức</p><LevelMark level={level}/></div>
-      <dl className="mt-4 space-y-5">{fields.map(([label, value]) => <div key={label}><dt className="text-sm text-[var(--text-muted,#5c5c57)]">{label}</dt><dd className="mt-1 break-words">{value}</dd></div>)}</dl>
+  return <div className="fixed inset-0 z-50 flex justify-end bg-black/60" onMouseDown={(mouse) => { if (mouse.target === mouse.currentTarget) onClose(); }}>
+    <aside ref={dialog} role="dialog" aria-modal="true" aria-labelledby="event-title" className="h-full w-full max-w-md overflow-y-auto bg-[var(--surface,#fff)] p-6 text-[var(--text,#1a1a18)]">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-[14px] text-[var(--text-muted,#5c5c57)]">Chi tiết sự kiện</p>
+          <h2 id="event-title" className="mt-1 text-[24px] leading-tight font-semibold">{eventNames[event.event_type] ?? event.event_type}</h2>
+        </div>
+        <button ref={close} type="button" onClick={onClose} aria-label="Đóng chi tiết sự kiện" className="btn btn-quiet">Đóng</button>
+      </div>
+      <div className="mt-6"><LevelMark level={level}/></div>
+      <dl className="mt-6 grid gap-2">{fields.map(([label, value]) => <div key={label} className="rounded-[var(--radius,6px)] bg-[var(--bg,#f6f6f4)] px-4 py-3"><dt className="text-[14px] text-[var(--text-muted,#5c5c57)]">{label}</dt><dd className="mt-1 text-[16px] font-medium break-words">{value}</dd></div>)}</dl>
     </aside>
   </div>;
 }

@@ -115,22 +115,22 @@ test("beepPattern: returns expected configs for all stages", () => {
 
   assert.deepEqual(beepPattern("caution"), {
     frequencyHz: 660,
-    durationMs: 200,
-    intervalMs: 4000,
-    volume: 0.15,
+    durationMs: 250,
+    intervalMs: 2000,
+    volume: 0.45,
   });
 
   assert.deepEqual(beepPattern("danger"), {
     frequencyHz: 880,
-    durationMs: 250,
+    durationMs: 300,
     intervalMs: 1000,
-    volume: 0.3,
+    volume: 0.7,
   });
 
   assert.deepEqual(beepPattern("danger_escalated"), {
     frequencyHz: 1100,
     durationMs: 300,
     intervalMs: 500,
-    volume: 0.5,
+    volume: 0.9,
   });
 });

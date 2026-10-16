@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DriverGuard: giám sát tài xế ngay trên máy</title>
+  <meta name="description" content="DriverGuard dùng một camera trong khoang lái để nhận ra buồn ngủ, quay đầu, cúi đầu và dùng điện thoại, rồi phủ vàng hoặc đỏ cả màn hình. Mọi xử lý chạy trên máy, không cần Internet.">
+  <script>document.documentElement.classList.add('js')</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="hero" id="top" data-level="NORMAL">
+  <div class="hero__bar wrap">
+    <a class="wordmark" href="#top">DriverGuard</a>
+    <nav class="hero__nav" aria-label="Trong trang">
+      <a class="link hero__link" href="#cach-dung">Cách dùng</a>
+      <a class="link hero__link" href="#ket-qua">Kết quả</a>
+      <a class="button hero__button" href="https://github.com/huybla166/K4-Track4-Capstone-Team-NguDaiThienVuong">Chạy thử</a>
+    </nav>
+  </div>
+
+  <div class="hero__stage wrap">
+    <div class="chip chip--eyes" data-ui data-rise style="--i:2">
+      <div class="chip__top">
+        <label for="eyes">Nhắm mắt</label>
+        <output id="eyes-out" for="eyes">0,6 giây</output>
+      </div>
+      <input class="range" type="range" id="eyes" min="0" max="3" step="0.1" value="0.6" aria-describedby="hero-status">
+    </div>
+
+    <h1 class="hero__title lines">
+      <span class="line"><span data-line style="--i:0">Mắt nhắm,</span></span>
+      <span class="line"><span data-line style="--i:1">màn hình đỏ</span></span>
+    </h1>
+
+    <p class="hero__lead" data-rise style="--i:3">Một camera trong khoang lái theo dõi mắt, đầu và điện thoại của tài xế, xử lý ngay trên máy, không cần Internet.</p>
+
+    <div class="hero__chips">
+      <div class="chip chip--head" data-ui data-rise style="--i:4">
+        <div class="chip__top">
+          <label for="head">Quay đầu quá 30°</label>
+          <output id="head-out" for="head">0,0 giây</output>
+        </div>
+        <input class="range" type="range" id="head" min="0" max="4" step="0.1" value="0" aria-describedby="hero-status">
+      </div>
+
+      <div class="chip chip--phone" data-ui data-rise style="--i:4">
+        <div class="chip__top">
+          <span id="phone-label">Cầm điện thoại</span>
+          <output id="phone-out">Không</output>
+        </div>
+        <button class="switch" type="button" role="switch" id="phone" aria-checked="false" aria-labelledby="phone-label"><span class="switch__knob"></span></button>
+      </div>
+    </div>
+
+    <p class="hero__status" id="hero-status" role="status" data-rise style="--i:5">Kéo nút Nhắm mắt qua 1,8 giây để thấy màn hình tài xế đổi màu.</p>
+  </div>
+</header>
+
+<main>
+
+  <section class="coach" aria-labelledby="coach-text">
+    <figure class="coach__figure" data-reveal>
+      <img class="drift" src="assets/thanh-buoi-sleeper-coach.jpg" width="2200" height="1240" alt="Khoang xe giường nằm ban đêm: hành khách đã nằm, đèn trần xanh đỏ còn sáng dọc lối đi" loading="lazy" decoding="async">
+    </figure>
+    <div class="coach__text wrap grid">
+      <p class="statement" id="coach-text" data-reveal>Trên xe giường nằm, cả xe được ngủ, trừ một người.</p>
+      <p class="caption" data-reveal style="--d:1">Xe Thành Bưởi tuyến Sài Gòn – Đà Lạt. Đèn trần tắt ngay sau khi xe rời bến.</p>
+    </div>
+  </section>
+
+  <section class="compare" id="nguong" aria-labelledby="compare-title">
+    <div class="compare__top wrap grid">
+      <h2 class="compare__title" id="compare-title" data-reveal>Chớp mắt hay ngủ gật</h2>
+      <p class="compare__text" data-reveal style="--d:1">Ai cũng chớp mắt, nên một khung hình nhắm mắt chưa nói lên điều gì. DriverGuard chỉ báo khi mắt nhắm liên tục 1,8&nbsp;giây, đo bằng đồng hồ chứ không đếm khung hình, nên camera nhanh hay chậm thì ngưỡng vẫn vậy. Mốc “nhắm” cũng là của riêng bạn: 70% độ mở mắt đo trong 4&nbsp;giây hiệu chuẩn.</p>
+    </div>
+    <div class="compare__pair wrap grid">
+      <figure class="specimen" data-reveal style="--d:2">
+        <div class="specimen__box"><p class="specimen__num">0,4</p></div>
+        <figcaption>Một lần chớp mắt, tính bằng giây</figcaption>
+      </figure>
+      <figure class="specimen specimen--b" data-reveal style="--d:3">
+        <div class="specimen__box"><p class="specimen__num">1,8</p></div>
+        <figcaption>Nhắm liên tục chừng này giây thì màn hình đỏ</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="signs" id="dau-hieu" aria-labelledby="signs-title">
+    <div class="wrap">
+      <ul class="signs__list">
+        <li class="sign sign--head"><h2 class="sign__name" id="signs-title" data-reveal>Bảy dấu hiệu</h2></li>
+        <li class="sign" data-reveal style="--d:1">
+          <span class="sign__name">Nhắm mắt kéo dài</span>
+          <p class="sign__text"><span class="is-danger">Màn hình đỏ</span>, rủi ro 90, khi mắt nhắm liên tục 1,8&nbsp;giây. Nhắm từ 2&nbsp;giây là luôn đỏ, bất kể điểm trước đó.</p>
+        </li>
+        <li class="sign" data-reveal style="--d:2">
+          <span class="sign__name">Đang dùng điện thoại</span>
+          <p class="sign__text"><span class="is-danger">Màn hình đỏ</span>, rủi ro 80, khi điện thoại nằm trong vùng quanh mặt và ngực 1,5&nbsp;giây. Điện thoại để trên ghế thì không tính.</p>
+        </li>
+        <li class="sign" data-reveal style="--d:3">
+          <span class="sign__name">Quay đầu lệch hướng</span>
+          <p class="sign__text"><span class="is-warn">Màn hình vàng</span>, rủi ro 65, khi đầu lệch quá 30° so với tư thế chuẩn của chính bạn trong 2&nbsp;giây.</p>
+        </li>
+        <li class="sign" data-reveal style="--d:4">
+          <span class="sign__name">Cúi đầu</span>
+          <p class="sign__text"><span class="is-warn">Màn hình vàng</span>, rủi ro 65, khi cúi quá 20° trong 2&nbsp;giây, như lúc nhìn xuống lòng.</p>
+        </li>
+        <li class="sign" data-reveal style="--d:5">
+          <span class="sign__name">Không thấy khuôn mặt</span>
+          <p class="sign__text"><span class="is-warn">Màn hình vàng</span>, rủi ro 60, khi camera mất mặt 3&nbsp;giây liền. Đang thấy điện thoại sát mặt thì không tính là vắng mặt.</p>
+        </li>
+        <li class="sign" data-reveal style="--d:6">
+          <span class="sign__name">Ngáp</span>
+          <p class="sign__text"><span class="is-warn">Màn hình vàng</span>, rủi ro 45, khi miệng mở rộng 2&nbsp;giây. Mỗi lần ngáp còn được đếm cho dòng dưới.</p>
+        </li>
+        <li class="sign" data-reveal style="--d:7">
+          <span class="sign__name">Mệt mỏi tích lũy</span>
+          <p class="sign__text"><span class="is-warn">Màn hình vàng</span> khi thời gian nhắm mắt trong 60&nbsp;giây gần nhất cộng số lần ngáp trong 5&nbsp;phút vượt 50 điểm. Nhiều nhất một lần mỗi phút.</p>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="road" aria-labelledby="road-text">
+    <div class="road__grid wrap grid">
+      <figure class="road__wide shutter" data-reveal>
+        <img src="assets/quoc-lo-1a-chi-lang.jpg" width="2200" height="1650" alt="Quốc lộ 1A thẳng tắp giữa ruộng lúa và núi đá vôi, trời nắng, đường vắng" loading="lazy" decoding="async">
+      </figure>
+      <figure class="road__narrow shutter" data-reveal style="--d:2">
+        <img src="assets/sleeper-bus-in-vietnam-01.jpg" width="2200" height="1466" alt="Hai xe giường nằm xanh và đỏ đỗ ở bến xe Miền Đông, kính trước gắn bảng Hà Nội" loading="lazy" decoding="async">
+      </figure>
+    </div>
+    <div class="road__text wrap grid">
+      <p class="statement" id="road-text" data-reveal>Quốc lộ 1A dài hơn 2.300&nbsp;km, từ Lạng Sơn tới Cà Mau. Xe giường nằm trên đó thường chạy qua đêm.</p>
+      <p class="caption" data-reveal style="--d:1">Trái: quốc lộ 1A đoạn Chi Lăng, Lạng Sơn. Phải: xe giường nằm chờ chạy tuyến Hà Nội ở bến xe Miền Đông.</p>
+    </div>
+  </section>
+
+  <section class="speed" id="quang-duong" aria-labelledby="speed-title">
+    <div class="speed__inner wrap">
+      <div class="speed__top">
+        <h2 class="speed__q" id="speed-title" data-reveal>Nhắm mắt, xe đi bao xa?</h2>
+        <div class="speed__control" data-reveal style="--d:1">
+          <div class="speed__label">
+            <label for="speed">Tốc độ</label>
+            <output id="speed-out" for="speed">80 km/h</output>
+          </div>
+          <input class="range range--speed" type="range" id="speed" min="30" max="120" step="5" value="80" aria-describedby="speed-how">
+        </div>
+      </div>
+      <div class="speed__result">
+        <p class="speed__figure" aria-live="polite" data-reveal style="--d:2"><span id="speed-m">40</span><span class="speed__unit">&nbsp;m</span></p>
+        <p class="speed__how" id="speed-how" data-reveal style="--d:3">Quãng đường xe chạy trong 1,8&nbsp;giây mắt nhắm, đúng khoảng DriverGuard chờ để chắc bạn không chỉ chớp mắt. Cách tính: tốc độ ÷ 3,6 × 1,8.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="steps" id="cach-dung" aria-labelledby="steps-title">
+    <div class="wrap">
+      <h2 class="steps__title" id="steps-title" data-reveal>Bấm một lần, rồi lái</h2>
+      <ol class="steps__bar">
+        <li class="step step--start" style="--g:16">
+          <div class="step__seg" data-reveal style="--d:1"><span class="step__time">Một lần bấm</span></div>
+          <p class="step__text" data-reveal style="--d:2">Đầu tiên, bấm Bắt đầu để trình duyệt được phát tiếng cảnh báo.</p>
+        </li>
+        <li class="step step--calib" style="--g:16">
+          <div class="step__seg" data-reveal style="--d:2"><span class="step__time">Bốn giây</span></div>
+          <p class="step__text" data-reveal style="--d:3">Sau đó nhìn thẳng 4&nbsp;giây. Tư thế đầu và độ mở mắt lúc này thành mốc của riêng bạn.</p>
+        </li>
+        <li class="step step--drive" style="--g:52">
+          <div class="step__seg" data-reveal style="--d:3"><span class="step__time">Cả chuyến đi</span></div>
+          <p class="step__text" data-reveal style="--d:4">Rồi cứ lái. Màn hình im lặng với một dòng “Đang theo dõi”, chỉ phủ vàng hoặc đỏ khi có chuyện.</p>
+        </li>
+        <li class="step step--review" style="--g:16">
+          <div class="step__seg" data-reveal style="--d:4"><span class="step__time">Sau chuyến</span></div>
+          <p class="step__text" data-reveal style="--d:5">Cuối cùng, trang Giám sát liệt kê từng sự kiện: lúc nào, bao lâu, bao nhiêu điểm.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="film" aria-labelledby="film-text">
+    <div class="film__grid wrap grid">
+      <figure class="film__media" data-reveal>
+        <video autoplay muted loop playsinline preload="metadata" poster="assets/knights-on-the-highway-1938-poster.jpg" width="640" height="480" aria-hidden="true">
+          <source src="assets/knights-on-the-highway-1938.webm" type="video/webm">
+          <source src="assets/knights-on-the-highway-1938.mp4" type="video/mp4">
+        </video>
+      </figure>
+      <div class="film__text">
+        <p class="statement" id="film-text" data-reveal style="--d:1">Từ năm 1938 đã có phim dạy tài xế xe tải lái đêm. Cơn buồn ngủ thì vẫn ở đó.</p>
+        <p class="caption" data-reveal style="--d:2">Trích phim “Knights on the Highway”, 1938, lưu ở Internet Archive.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="proof" id="ket-qua" aria-labelledby="proof-title">
+    <div class="proof__head wrap grid">
+      <h2 class="proof__title" id="proof-title" data-reveal><span>Thử với</span> <span class="proof__indent">người thật</span></h2>
+      <figure class="proof__screen" data-reveal style="--d:1">
+        <div class="screen" data-ui>
+          <div class="screen__top"><span></span><span>Rủi ro: 90</span></div>
+          <div class="screen__main">
+            <svg class="screen__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span class="screen__word">NGUY HIỂM</span>
+          </div>
+          <span class="screen__reason">Nhắm mắt kéo dài</span>
+          <span class="screen__mute">Tắt tiếng 15 giây</span>
+        </div>
+        <figcaption>Màn hình tài xế ở pha nhắm mắt của phiên 3, khi rủi ro chạm 90. Dựng lại bằng HTML theo đúng giao diện thật.</figcaption>
+      </figure>
+    </div>
+
+    <div class="wrap">
+      <table class="results">
+        <caption class="sr-only">Kết quả các lần thử DriverGuard</caption>
+        <colgroup><col class="c-session"><col class="c-act"><col class="c-sys"><col class="c-res"></colgroup>
+        <thead>
+          <tr><th scope="col">Lần thử</th><th scope="col">Người thử làm gì</th><th scope="col">Màn hình tài xế</th><th scope="col" class="num">Kết quả</th></tr>
+        </thead>
+        <tbody data-group="Phiên 3, 07/10/2026">
+          <tr><th scope="row" rowspan="13" class="results__session">Phiên 3, <br>07/10/2026</th><td>Ngồi tự nhiên, nhìn thẳng</td><td>Vàng 0,6&nbsp;giây, lúc người thử nhắm mắt thật 1,2&nbsp;giây</td><td class="num">Đúng thiết kế</td></tr>
+          <tr><td>Chớp mắt bình thường</td><td>Không đổi</td><td class="num">Đúng</td></tr>
+          <tr><td>Nhắm mắt, giữ 7&nbsp;giây</td><td>Vàng ở giây 2,8, rồi đỏ: nhắm mắt kéo dài</td><td class="num">Đúng</td></tr>
+          <tr><td>Quay sang trái</td><td>Vàng ở giây 3,8: quay đầu lệch hướng</td><td class="num">Đúng</td></tr>
+          <tr><td>Quay trái tới mép cửa sổ</td><td>Vàng ở giây 7,1, sát cuối pha</td><td class="num">Đúng, chậm</td></tr>
+          <tr><td>Quay sang phải</td><td>Giữ vàng suốt pha</td><td class="num">Đúng</td></tr>
+          <tr><td>Quay phải tới mép cửa sổ</td><td>Giữ vàng suốt pha</td><td class="num">Đúng</td></tr>
+          <tr><td>Cúi đầu nhìn xuống lòng</td><td>Vàng: cúi đầu</td><td class="num">Đúng</td></tr>
+          <tr><td>Há miệng như ngáp</td><td>Vàng ở giây 3,8: ngáp</td><td class="num">Đúng</td></tr>
+          <tr><td>Đếm to từ 1 đến 15</td><td>Không đổi</td><td class="num">Đúng</td></tr>
+          <tr><td>Cười thật to</td><td>Không đổi</td><td class="num">Đúng</td></tr>
+          <tr><td>Cầm điện thoại trước ngực</td><td>Không đổi trong pha, đỏ 0,6&nbsp;giây sau khi hạ máy</td><td class="num">Trễ</td></tr>
+          <tr><td>Đưa điện thoại sát mặt</td><td>Đỏ suốt pha: đang dùng điện thoại</td><td class="num">Đúng</td></tr>
+        </tbody>
+        <tbody class="results__gap" aria-hidden="true"><tr><td colspan="4"></td></tr></tbody>
+        <tbody data-group="Phiên 4, 08/10/2026">
+          <tr><th scope="row" rowspan="3" class="results__session">Phiên 4, <br>08/10/2026</th><td>Ngáp to rồi nhắm mắt khoảng 1&nbsp;giây, 4&nbsp;lần</td><td>Báo ngáp cả 4&nbsp;lần, báo nhắm mắt 2&nbsp;lần</td><td class="num">4/4 ngáp</td></tr>
+          <tr><td>Ngáp nhẹ, 2&nbsp;lần</td><td>Không báo</td><td class="num">Sót 2/2</td></tr>
+          <tr><td>Chỉ nhắm mắt khoảng 1&nbsp;giây, 2&nbsp;lần</td><td>Không báo</td><td class="num">Đúng</td></tr>
+        </tbody>
+        <tbody class="results__gap" aria-hidden="true"><tr><td colspan="4"></td></tr></tbody>
+        <tbody data-group="Bộ ảnh có sẵn">
+          <tr><th scope="row" rowspan="2" class="results__session">Bộ ảnh <br>có sẵn</th><td>State Farm: 1.500 ảnh tài xế trong xe</td><td>Tìm điện thoại bằng YOLO26x</td><td class="num">F1 0,88</td></tr>
+          <tr><td>Pointing’04: 13.950 ảnh đầu quay nhiều hướng</td><td>Nhận ra quay đầu, gần như không báo nhầm</td><td class="num">Bắt 53%</td></tr>
+        </tbody>
+      </table>
+      <p class="proof__note" data-reveal>Màn hình đổi màu đúng ở 8 trên 9 pha cần báo; chớp mắt, nói chuyện và cười không làm nó đổi. Một người thử, camera laptop, trong nhà, mỗi pha 7&nbsp;giây, thời điểm tính từ lúc lệnh hiện lên. Nhật ký thí nghiệm ghi 9/9 vì tính cả lúc hệ thống thấy điện thoại mà chưa báo; bảng này tính theo màu màn hình.</p>
+    </div>
+  </section>
+
+  <section class="about" id="du-an" aria-label="Về dự án">
+    <div class="about__one wrap">
+      <dl class="about__facts" data-reveal>
+        <div><dt>Đề tài</dt><dd>DEV-02</dd></div>
+        <div><dt>Nhóm</dt><dd>Ngũ Đại Thiên Vương</dd></div>
+        <div><dt>Chương trình</dt><dd>Capstone K4, Track 4</dd></div>
+      </dl>
+      <p class="about__para" data-reveal style="--d:1">DriverGuard chạy trọn trên một máy tính đặt trong xe. Camera gửi 30 khung hình mỗi giây; MediaPipe tìm 478 điểm trên khuôn mặt để đo độ mở mắt, độ mở miệng và góc đầu, còn YOLO26x tìm điện thoại 5 lần mỗi giây trên một luồng riêng. Máy trạng thái chỉ báo khi tín hiệu kéo dài đủ lâu, rồi điểm rủi ro hạ dần sau khi nguy cơ qua đi. Hình không được lưu và không rời khỏi máy.</p>
+    </div>
+    <div class="about__two wrap">
+      <figure class="about__photo shutter" data-reveal>
+        <img src="assets/nara-truck-driver-1974.jpg" width="2200" height="1506" alt="Tài xế ngồi trong cabin xe tải năm 1974, cánh cửa sơn vàng ghi Wilson Truck Line" loading="lazy" decoding="async">
+        <figcaption>Tài xế xe tải ở Kansas, Mỹ, năm 1974.</figcaption>
+      </figure>
+      <div class="about__list" data-reveal style="--d:1">
+        <h2 class="about__word">Đã đo</h2>
+        <ul>
+          <li><span>Phiên người thật, pha 7&nbsp;giây</span><span>8/9 pha</span></li>
+          <li><span>Đổi màu khi chớp mắt, nói, cười</span><span>0 lần</span></li>
+          <li><span>Điện thoại trong xe, State Farm</span><span>F1 0,88</span></li>
+          <li><span>Điện thoại, ảnh COCO</span><span>F1 0,76</span></li>
+          <li><span>Quay đầu, Pointing’04</span><span>53%</span></li>
+          <li><span>Camera và tìm mặt</span><span>30 FPS</span></li>
+          <li><span>Thời gian tìm mặt mỗi khung</span><span>27 ms</span></li>
+          <li><span>Tìm điện thoại, luồng riêng</span><span>5–6 FPS</span></li>
+          <li><span>Kiểm thử tự động lõi AI</span><span>59 test</span></li>
+        </ul>
+      </div>
+      <div class="about__list" data-reveal style="--d:2">
+        <h2 class="about__word">Còn thiếu</h2>
+        <ul>
+          <li><span>Người thử thứ hai</span><span>Chưa có</span></li>
+          <li><span>Cabin xe thật</span><span>Chưa thử</span></li>
+          <li><span>Hồng ngoại, đeo khẩu trang</span><span>13% khung</span></li>
+          <li><span>Cúi đầu khi mất mặt</span><span>Còn yếu</span></li>
+          <li><span>Ngáp nhẹ</span><span>Còn sót</span></li>
+          <li><span>Tay rời vô lăng</span><span>Chưa đưa vào</span></li>
+          <li><span>Ngáp rồi nhắm mắt ngắn</span><span>Đang thử</span></li>
+          <li><span>Jetson, ONNX, TensorRT</span><span>Chưa đo</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <a class="cta" href="https://github.com/huybla166/K4-Track4-Capstone-Team-NguDaiThienVuong">
+    <span class="cta__lead">Mã nguồn, tài liệu và lệnh chạy nằm trong kho GitHub của nhóm. Chưa có camera thì bật chế độ mô phỏng.</span>
+    <svg class="cta__arrow" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M14 34 34 14M18 14h16v16"/></svg>
+    <span class="cta__word" data-reveal>Chạy thử</span>
+  </a>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <p class="foot__name" data-reveal>DriverGuard</p>
+    <div class="foot__row grid">
+      <ul class="foot__places">
+        <li><a class="link" href="https://github.com/huybla166/K4-Track4-Capstone-Team-NguDaiThienVuong">GitHub</a></li>
+        <li><a class="link" href="https://github.com/huybla166/K4-Track4-Capstone-Team-NguDaiThienVuong/tree/main/DriverGuard_Docs">Tài liệu thiết kế</a></li>
+        <li><a class="link" href="https://github.com/huybla166/K4-Track4-Capstone-Team-NguDaiThienVuong/blob/main/docs/EXPERIMENT_LOG.md">Nhật ký thí nghiệm</a></li>
+      </ul>
+      <div class="foot__cols">
+        <div>
+          <h2 class="foot__h">Tài liệu</h2>
+          <ul>
+            <li><a class="link" href="https://github.com/huybla166/K4-Track4-Capstone-Team-NguDaiThienVuong/blob/main/DriverGuard_Docs/00_PROJECT_OVERVIEW.md">Tổng quan</a></li>
+            <li><a class="link" href="https://github.com/huybla166/K4-Track4-Capstone-Team-NguDaiThienVuong/blob/main/DriverGuard_Docs/04_SYSTEM_ARCHITECTURE.md">Kiến trúc</a></li>
+            <li><a class="link" href="https://github.com/huybla166/K4-Track4-Capstone-Team-NguDaiThienVuong/blob/main/DriverGuard_Docs/05_AI_CV_PIPELINE.md">Pipeline AI</a></li>
+            <li><a class="link" href="https://github.com/huybla166/K4-Track4-Capstone-Team-NguDaiThienVuong/blob/main/docs/MVP_REPORT.md">Báo cáo MVP</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2 class="foot__h">Mã nguồn</h2>
+          <ul>
+            <li><a class="link" href="https://github.com/huybla166/K4-Track4-Capstone-Team-NguDaiThienVuong/tree/main/ai">Lõi AI</a></li>
+            <li><a class="link" href="https://github.com/huybla166/K4-Track4-Capstone-Team-NguDaiThienVuong/tree/main/apps/backend">Backend</a></li>
+            <li><a class="link" href="https://github.com/huybla166/K4-Track4-Capstone-Team-NguDaiThienVuong/tree/main/apps/web">Giao diện</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2 class="foot__h">Trong trang</h2>
+          <ul>
+            <li><a class="link" href="#dau-hieu">Bảy dấu hiệu</a></li>
+            <li><a class="link" href="#cach-dung">Cách dùng</a></li>
+            <li><a class="link" href="#ket-qua">Kết quả</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="foot__credits">
+      <h2 class="foot__h">Ảnh và phim</h2>
+      <p>Ảnh và phim dưới đây cho thấy bối cảnh đường dài, không phải xe đã lắp DriverGuard.</p>
+      <ul>
+        <li><a class="link" href="https://commons.wikimedia.org/wiki/File:Thanh_Buoi_sleeper_coach.jpg">“Thanh Buoi sleeper coach”</a>, Tobias b köhler, CC BY-SA 3.0, Wikimedia Commons.</li>
+        <li><a class="link" href="https://commons.wikimedia.org/w/index.php?curid=28582379">“Quốc lộ 1A, đoạn Chi Lăng”</a>, Bùi Thụy Đào Nguyên, CC BY-SA 3.0, Wikimedia Commons.</li>
+        <li><a class="link" href="https://commons.wikimedia.org/wiki/File:Sleeper_bus_in_Vietnam_01.JPG">“Sleeper bus in Vietnam 01”</a>, Ilya Plekhanov, CC BY-SA 4.0, Wikimedia Commons.</li>
+        <li><a class="link" href="https://commons.wikimedia.org/wiki/File:DRIVER_IN_THE_CAB_OF_A_LARGE_CATTLE_TRUCK_IN_COTTONWOOD_FALLS,_KANSAS,_NEAR_EMPORIA._SUCH_VEHICLES_AND_HORSES_ARE_THE..._-_NARA_-_557044.jpg">“Driver in the cab of a large cattle truck”</a>, Patricia DuBose Duncan, 1974, phạm vi công cộng, NARA qua Wikimedia Commons.</li>
+        <li><a class="link" href="https://archive.org/details/Knightso1938">“Knights on the Highway”</a>, Handy (Jam) Organization, 1938, phạm vi công cộng, Internet Archive.</li>
+      </ul>
+    </div>
+    <div class="foot__legal">
+      <p>Đồ án DEV-02 của nhóm Ngũ Đại Thiên Vương, 2026.</p>
+      <a class="link" href="#top">Lên đầu trang</a>
+    </div>
+  </div>
+</footer>
+
+<script src="main.js" defer></script>
+</body>
+</html>

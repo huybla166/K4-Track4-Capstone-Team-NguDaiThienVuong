@@ -195,3 +195,38 @@ def test_lost_face_after_large_turn_counts_as_looking_away():
     assert "DRIVER_ABSENCE" not in event_types(lost)
     later = run(pipe, 9.2, 3.2, lambda t: None)
     assert "DRIVER_ABSENCE" in event_types(later)
+
+
+def test_single_frame_ear_dips_do_not_inflate_perclos():
+    pipe = calibrated_pipe()
+    # Mỗi giây có 1 khung EAR rơi xuống 0,05 (nhiễu landmark), mắt thực tế vẫn mở
+    res = run(pipe, 5.1, 40.0, lambda t: face(ear=0.05 if int(round(t * 10)) % 10 == 0 else 0.30, yaw=10.0, pitch=-5.0))
+    assert res[-1][1]["perclos"] < 0.02
+    assert res[-1][1]["risk_level"] == "NORMAL"
+
+
+def test_turned_head_is_left_out_of_perclos():
+    pipe = calibrated_pipe()
+    # Quay đầu 45°: EAR 2D méo thấp, không được tính là nhắm mắt cho mệt mỏi tích lũy
+    res = run(pipe, 5.1, 40.0, lambda t: face(ear=0.08, yaw=55.0, pitch=-5.0))
+    assert res[-1][1]["perclos"] == 0.0
+    assert res[-1][1]["chronic_risk"] == 0.0
+
+
+def test_recalibration_clears_fatigue_history():
+    pipe = calibrated_pipe()
+    run(pipe, 5.1, 3.0, lambda t: face(mar=0.80, yaw=10.0, pitch=-5.0))  # một lần ngáp
+    tele = run(pipe, 8.2, 1.0, lambda t: face(yaw=10.0, pitch=-5.0))[-1][1]
+    assert tele["chronic_risk"] >= 10.0
+    pipe.start_calibration()
+    tele = run(pipe, 9.3, 5.0, lambda t: face(yaw=10.0, pitch=-5.0))[-1][1]
+    assert tele["chronic_risk"] == 0.0
+
+
+def test_chronic_fatigue_can_be_switched_off():
+    pipe = DriverPipeline(Thresholds(use_chronic_fatigue=False))
+    run(pipe, 0.0, 5.0, lambda t: face(yaw=10.0, pitch=-5.0))
+    res = run(pipe, 5.1, 40.0, lambda t: face(ear=0.05 if int(t) % 3 == 0 else 0.30, yaw=10.0, pitch=-5.0))
+    assert res[-1][1]["perclos"] > 0.2
+    assert res[-1][1]["chronic_risk"] == 0.0
+    assert not any(e["event_type"] == "CHRONIC_FATIGUE" for _, _, ev in res for e in ev)

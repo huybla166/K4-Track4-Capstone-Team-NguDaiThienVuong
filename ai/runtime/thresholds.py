@@ -29,6 +29,7 @@ class Thresholds:
     pose_pitch_ratio: float = 0.30
     pose_max_age_s: float = 0.6
     use_yawn_context: bool = False
+    use_chronic_fatigue: bool = True
     yawn_context_window_s: float = 5.0
     yawn_context_eye_s: float = 0.8
 

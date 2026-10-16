@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { getOrCreateAudioContext } from "@/lib/useAlertSound";
+import { playTestBeep } from "@/lib/useAlertSound";
 
 interface StartGateProps {
   connected: boolean;
@@ -10,47 +10,48 @@ interface StartGateProps {
 
 export function StartGate({ connected, onStart }: StartGateProps) {
   const handleStart = () => {
-    getOrCreateAudioContext();
+    playTestBeep();
     onStart();
   };
 
   return (
-    <main className="min-h-dvh flex flex-col justify-between p-6 select-none bg-[var(--bg)] text-[var(--text)]">
-      <header className="w-full max-w-md mx-auto flex items-center justify-between">
-        <h1 className="text-[20px] font-semibold text-[var(--text)]">
-          DriverGuard
-        </h1>
-        {!connected && (
-          <span className="text-[12px] font-medium text-[var(--text-muted)]">
-            Mất kết nối
-          </span>
-        )}
+    <main className="app-stagger min-h-dvh flex flex-col select-none bg-[var(--bg)] text-[var(--text)]">
+      <header className="flex items-center justify-between gap-4 px-[clamp(16px,3vw,32px)] pt-5">
+        <h1 className="text-[20px] font-semibold">DriverGuard</h1>
+        <span role="status" className="inline-flex items-center gap-2 text-[16px] font-medium">
+          <span className={`status-square ${connected ? "is-ok" : ""}`} aria-hidden="true" />
+          {connected ? "Đã kết nối" : "Mất kết nối"}
+        </span>
       </header>
 
-      <section className="flex flex-col items-center justify-center my-auto py-8 px-4 max-w-md mx-auto w-full">
+      <section className="flex-1 flex flex-col items-center justify-center px-6 py-12 w-full">
         <button
           type="button"
           onClick={handleStart}
-          aria-label="Bắt đầu"
-          className="w-full h-16 min-h-[64px] text-[20px] font-semibold text-white bg-[var(--accent)] hover:opacity-90 active:opacity-100 rounded-[var(--radius-lg)] transition-opacity flex items-center justify-center cursor-pointer border-0"
+          className="w-full max-w-[480px] h-20 min-h-[80px] text-[24px] font-semibold rounded-full bg-[var(--accent)] text-[var(--accent-ink)] hover:bg-[var(--accent-strong)] active:scale-[0.98] transition flex items-center justify-center cursor-pointer border-0"
         >
           Bắt đầu
         </button>
-        <p className="text-[14px] text-[var(--text-muted)] mt-3 text-center">
-          Âm thanh cảnh báo sẽ được bật.
+        <p className="text-[16px] text-[var(--text-muted)] mt-4 text-center">
+          Âm thanh cảnh báo sẽ được bật. Bạn sẽ nghe một tiếng bíp khi bấm.
         </p>
+        {!connected && (
+          <p className="text-[16px] text-[var(--text)] mt-2 text-center max-w-[40ch]">
+            Chưa thấy hệ thống DriverGuard. Màn hình sẽ tự kết nối khi backend chạy.
+          </p>
+        )}
       </section>
 
-      <footer className="flex flex-wrap items-center justify-center gap-2 w-full max-w-md mx-auto py-2">
+      <footer className="flex flex-wrap items-center justify-center gap-2 pb-4">
         <Link
           href="/monitor"
-          className="min-h-[48px] inline-flex items-center text-[14px] text-[var(--text-muted)] hover:text-[var(--text)] underline underline-offset-4 px-3 transition-colors"
+          className="min-h-[48px] inline-flex items-center text-[16px] text-[var(--accent)] hover:text-[var(--accent-strong)] underline underline-offset-4 px-3 transition-colors"
         >
           Giám sát
         </Link>
         <Link
           href="/camera"
-          className="min-h-[48px] inline-flex items-center text-[14px] text-[var(--text-muted)] hover:text-[var(--text)] underline underline-offset-4 px-3 transition-colors"
+          className="min-h-[48px] inline-flex items-center text-[16px] text-[var(--accent)] hover:text-[var(--accent-strong)] underline underline-offset-4 px-3 transition-colors"
         >
           Camera
         </Link>

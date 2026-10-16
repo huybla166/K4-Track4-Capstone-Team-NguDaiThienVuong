@@ -29,6 +29,10 @@ export interface Telemetry {
   looking_down: boolean;
   phone_detected: boolean;
   phone_usage: boolean;
+  /** Tỉ lệ thời gian nhắm mắt trong 60 giây gần nhất (0–1) */
+  perclos?: number;
+  /** Điểm rủi ro mãn tính: PERCLOS × 200 + số lần ngáp × 10, tối đa 70 */
+  chronic_risk?: number;
   risk_score: number;
   risk_level: RiskLevel;
   fps: { camera: number; face: number; phone: number };

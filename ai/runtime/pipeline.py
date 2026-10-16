@@ -65,6 +65,8 @@ class DriverPipeline:
         self.absence_fsm = DurationFSM(t.absence_s, t.cooldown_s)
         self.eye_buffer = TimedBuffer(max_age_s=t.perclos_window_s)
         self._closed_samples: deque[tuple[float, bool]] = deque()
+        # EAR vài khung gần nhất: PERCLOS dùng trung vị để bỏ nhiễu một khung đơn lẻ
+        self._ear_recent: deque[float] = deque(maxlen=5)
         self._yawns: deque[float] = deque()
         self._last_yawn_context_time: float | None = None
         self._prev: dict[str, AlertState] = {}
@@ -90,6 +92,10 @@ class DriverPipeline:
         self._pose_yaw_samples = []
         self._pose_pitch_samples = []
         self.pose_yaw_baseline = None
+        # Lịch sử mệt mỏi được chấm theo ngưỡng cũ: hiệu chuẩn lại thì tính lại từ đầu
+        self._closed_samples.clear()
+        self._ear_recent.clear()
+        self._yawns.clear()
         self.pose_pitch_baseline = None
 
     @property
@@ -128,6 +134,7 @@ class DriverPipeline:
         ear = mar = yaw = pitch = roll = 0.0
         eyes_closed_s = 0.0
         eye_closed_now = False
+        facing = False
         if face is not None:
             ear, mar, yaw, pitch, roll = face.ear, face.mar, face.yaw, face.pitch, face.roll
             if mar > t.mar_threshold:
@@ -157,7 +164,12 @@ class DriverPipeline:
             eye_closed_now = ear < self.ear_threshold and not suppress_eyes
             self.eye_buffer.push(now, ear if not suppress_eyes else self.ear_threshold)
             eyes_closed_s = self.eye_buffer.duration_below(self.ear_threshold)
-            self._closed_samples.append((now, eye_closed_now))
+            # Khi đầu quay quá ngưỡng, EAR/MAR 2D bị méo (EAR > 0,5, MAR > 1): không đưa vào PERCLOS và đếm ngáp
+            facing = abs(rel_yaw) <= t.yaw_threshold
+            self._ear_recent.append(ear)
+            if facing:
+                smoothed_closed = median(self._ear_recent) < self.ear_threshold and not suppress_eyes
+                self._closed_samples.append((now, smoothed_closed))
         else:
             self.eye_buffer.reset()
         while self._closed_samples and self._closed_samples[0][0] < now - t.perclos_window_s:
@@ -180,7 +192,7 @@ class DriverPipeline:
         held_away = recent_away and not pose_fallback_ready
         signals = {
             "DROWSINESS_ACUTE": has_face and eye_closed_now,
-            "YAWNING": has_face and mar > t.mar_threshold,
+            "YAWNING": has_face and facing and mar > t.mar_threshold,
             "LOOKING_AWAY": (has_face and calibrated and head == "LOOKING_AWAY") or held_away or pose_away,
             "LOOKING_DOWN": (has_face and calibrated and head == "LOOKING_DOWN") or pose_down,
             "PHONE_USAGE": phone.usage_candidate,
@@ -233,7 +245,7 @@ class DriverPipeline:
         span = self._closed_samples[-1][0] - self._closed_samples[0][0] if self._closed_samples else 0.0
         if span >= t.perclos_window_s / 2:  # chỉ tin PERCLOS khi đã quan sát đủ lâu
             perclos = sum(c for _, c in self._closed_samples) / len(self._closed_samples)
-        chronic = min(70.0, perclos * 200.0 + len(self._yawns) * 10.0)
+        chronic = min(70.0, perclos * 200.0 + len(self._yawns) * 10.0) if t.use_chronic_fatigue else 0.0
 
         instant = 0.0
         for name, is_active in active.items():
@@ -295,6 +307,8 @@ class DriverPipeline:
             "looking_down": active["LOOKING_DOWN"],
             "phone_detected": phone.detected,
             "phone_usage": active["PHONE_USAGE"],
+            "perclos": round(perclos, 3),
+            "chronic_risk": round(chronic, 1),
             "pose": {
                 "person": pose is not None,
                 "yaw": round(pose.yaw_proxy, 4) if pose is not None else None,

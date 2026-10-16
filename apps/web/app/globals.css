@@ -1,51 +1,37 @@
 @import "tailwindcss";
 
+/* Bảng màu trắng – xanh theo Google (Material): một màu xanh cho hành động,
+   vàng/đỏ chỉ dành cho mức cảnh báo. Giao diện luôn sáng. */
 :root {
-  --bg: #f6f6f4;
+  color-scheme: light;
+  --bg: #f8f9fa;
   --surface: #ffffff;
-  --border: #d9d9d4;
-  --text: #1a1a18;
-  --text-muted: #5c5c57;
-  --accent: #1f5eff;
-  --ok: #1d7a46;
-  --ok-bg: #e6f4ec;
-  --warn: #8a5a00;
-  --warn-bg: #fff3d6;
-  --warn-solid: #f2b01e;
-  --danger: #b3261e;
-  --danger-bg: #fde8e6;
-  --danger-solid: #c62828;
+  --surface-2: #f1f3f4;
+  --border: #dadce0;
+  --text: #202124;
+  --text-muted: #5f6368;
+  --accent: #1a73e8;
+  --accent-strong: #1557b0;
+  --accent-ink: #ffffff;
+  --accent-soft: #e8f0fe;
+  --ok: #188038;
+  --ok-bg: #e6f4ea;
+  --warn: #b06000;
+  --warn-bg: #fef7e0;
+  --warn-solid: #f9ab00;
+  --warn-solid-2: #f29900;
+  --warn-ink: #202124;
+  --danger: #c5221f;
+  --danger-bg: #fce8e6;
+  --danger-solid: #c5221f;
+  --danger-solid-2: #a50e0e;
   --radius-sm: 4px;
-  --radius: 6px;
-  --radius-lg: 8px;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
 
   --background: var(--bg);
   --foreground: var(--text);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #121314;
-    --surface: #1b1c1e;
-    --border: #2e3033;
-    --text: #ececea;
-    --text-muted: #a3a39d;
-    --accent: #6b93ff;
-    --ok: #4cc38a;
-    --ok-bg: #17301f;
-    --warn: #f2b01e;
-    --warn-bg: #3a2d08;
-    --warn-solid: #f2b01e;
-    --danger: #ff6b61;
-    --danger-bg: #3d1512;
-    --danger-solid: #c62828;
-    --radius-sm: 4px;
-    --radius: 6px;
-    --radius-lg: 8px;
-
-    --background: var(--bg);
-    --foreground: var(--text);
-  }
 }
 
 @theme inline {
@@ -78,6 +64,138 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* ---------- shared by /monitor and /camera ---------- */
+.app-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 24px;
+  padding-block: 16px;
+}
+
+.app-title {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.app-title-page {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.app-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+.app-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.status-square {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  background: var(--danger);
+}
+
+.status-square.is-ok { background: var(--ok); }
+.status-square.is-warn { background: var(--warn-solid); }
+.status-square.is-off { background: var(--text-muted); }
+
+.app-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 10px;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 4px;
+  transition: text-decoration-color 150ms ease;
+}
+
+.app-link:hover {
+  text-decoration-color: currentColor;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 150ms ease, transform 120ms ease;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-strong);
+}
+
+.btn-quiet {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.btn-quiet:hover:not(:disabled) {
+  background: #d2e3fc;
+}
+
+.level-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px 3px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.level-mark svg {
+  flex: none;
+}
+
+.level-mark-normal { background: var(--ok-bg); color: var(--ok); }
+.level-mark-warning { background: var(--warn-bg); color: var(--warn); }
+.level-mark-danger { background: var(--danger-bg); color: var(--danger); }
+
 @keyframes pulse-danger-bg {
   0%,
   100% {
@@ -92,17 +210,55 @@ body {
   animation: pulse-danger-bg 1.2s ease-in-out infinite;
 }
 
+/* ---------- motion ---------- */
+@keyframes app-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes app-pop {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes app-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Các khối của trang xuất hiện lần lượt */
+.app-stagger > * {
+  animation: app-rise 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.app-stagger > *:nth-child(2) { animation-delay: 60ms; }
+.app-stagger > *:nth-child(3) { animation-delay: 120ms; }
+.app-stagger > *:nth-child(4) { animation-delay: 180ms; }
+.app-stagger > *:nth-child(5) { animation-delay: 240ms; }
+.app-stagger > *:nth-child(6) { animation-delay: 300ms; }
+.app-stagger > *:nth-child(n + 7) { animation-delay: 360ms; }
+
+/* Chữ trạng thái bật ra mỗi khi mức đổi */
+.app-pop {
+  animation: app-pop 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.app-fade {
+  animation: app-fade 400ms ease both;
+}
+
+/* Giảm chuyển động: giữ hiệu ứng mờ dần, bỏ trượt, phóng to và nhấp nháy */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+  .app-stagger > *,
+  .app-pop {
+    animation-name: app-fade;
+    animation-duration: 400ms;
   }
 
   .danger-escalated-bg {
     animation: none !important;
+  }
+
+  .btn:active:not(:disabled) {
+    transform: none;
   }
 }

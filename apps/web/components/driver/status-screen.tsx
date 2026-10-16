@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { postCalibrate, postMute } from "@/lib/api";
 import { activeReasons } from "@/lib/reasons";
-import { alertStage, type AlertStage } from "@/lib/alert-level";
+import { useAlertStage } from "@/lib/useAlertStage";
 import { useAlertSound } from "@/lib/useAlertSound";
 import { CalibrationRing } from "./calibration-ring";
 import type { Telemetry, RiskLevel } from "@/types/telemetry";
@@ -15,59 +15,15 @@ interface StatusScreenProps {
 }
 
 export function StatusScreen({ telemetry, connected }: StatusScreenProps) {
-  const [stage, setStage] = useState<AlertStage>("off");
   const [muting, setMuting] = useState(false);
   const [calibrating, setCalibrating] = useState(false);
-
-  const dangerSinceMsRef = useRef<number | null>(null);
 
   const currentLevel: RiskLevel = telemetry?.risk_level ?? "NORMAL";
   const isMuted = telemetry?.muted ?? false;
   const isCalibrated = telemetry?.calibrated ?? false;
   const hasCameraError = telemetry?.error === "camera_unavailable";
 
-  const stateRef = useRef({
-    level: currentLevel,
-    muted: isMuted,
-    connected,
-    calibrated: isCalibrated,
-  });
-
-  // Track the latest telemetry attributes and timestamp when DANGER state begins
-  useEffect(() => {
-    stateRef.current = {
-      level: currentLevel,
-      muted: isMuted,
-      connected,
-      calibrated: isCalibrated,
-    };
-
-    if (currentLevel === "DANGER") {
-      if (dangerSinceMsRef.current === null) {
-        dangerSinceMsRef.current = Date.now();
-      }
-    } else {
-      dangerSinceMsRef.current = null;
-    }
-  }, [currentLevel, isMuted, connected, isCalibrated]);
-
-  // Tick every 500ms to calculate alert stage without reading refs during render
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const s = stateRef.current;
-      const nextStage = alertStage({
-        level: s.level,
-        muted: s.muted,
-        connected: s.connected,
-        calibrated: s.calibrated,
-        dangerSinceMs: dangerSinceMsRef.current,
-        nowMs: Date.now(),
-      });
-      setStage(nextStage);
-    }, 500);
-
-    return () => clearInterval(timer);
-  }, []);
+  const stage = useAlertStage(currentLevel, isMuted, connected, isCalibrated);
 
   // Play synthesized Web Audio alerts
   useAlertSound(stage, true);
@@ -110,34 +66,37 @@ export function StatusScreen({ telemetry, connected }: StatusScreenProps) {
 
   let containerBg = "bg-[var(--bg)] text-[var(--text)]";
   if (isDisconnected) {
-    containerBg = "bg-[var(--bg)] text-[var(--text)] border-t-[4px] border-[var(--border)]";
+    containerBg = "bg-[var(--bg)] text-[var(--text)] border-t-[4px] border-[var(--danger)]";
   } else if (isDanger) {
     containerBg = `bg-[var(--danger-solid)] text-white ${isEscalated ? "danger-escalated-bg" : ""}`;
   } else if (isWarning) {
-    containerBg = "bg-[var(--warn-solid)] text-[#1a1a18]";
+    containerBg = "bg-[var(--warn-solid)] text-[#202124]";
   }
 
-  // Button styles based on state
-  let muteButtonClass = "bg-[var(--surface)] text-[var(--text)] border border-[var(--border)] hover:bg-[var(--bg)]";
-  let recalibrateButtonClass = "bg-[var(--surface)] text-[var(--text)] border border-[var(--border)] hover:bg-[var(--bg)]";
+  // Controls are solid fields that step with the screen colour, so they read at a glance in every state
+  let muteButtonClass = "bg-[var(--accent-soft)] text-[var(--accent-strong)] hover:bg-[#d2e3fc]";
+  let recalibrateButtonClass = "bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--border)]";
   let linkClass = "text-[var(--text-muted)] hover:text-[var(--text)]";
   let topInfoClass = "text-[var(--text-muted)]";
 
   if (isDanger) {
-    muteButtonClass = "bg-transparent text-white border-2 border-white hover:bg-white/10 active:bg-white/20";
-    recalibrateButtonClass = "bg-transparent text-white border border-white/80 hover:bg-white/10 active:bg-white/20";
-    linkClass = "text-white/80 hover:text-white";
-    topInfoClass = "text-white/80";
+    muteButtonClass = "bg-white text-[var(--danger-solid)] hover:bg-[#fce8e6]";
+    recalibrateButtonClass = "bg-[var(--danger-solid-2)] text-white hover:bg-[#8c0b0b]";
+    linkClass = "text-white hover:text-white";
+    topInfoClass = "text-white";
   } else if (isWarning) {
-    muteButtonClass = "bg-transparent text-[#1a1a18] border-2 border-[#1a1a18] hover:bg-black/5 active:bg-black/10";
-    recalibrateButtonClass = "bg-transparent text-[#1a1a18] border border-[#1a1a18]/80 hover:bg-black/5 active:bg-black/10";
-    linkClass = "text-[#1a1a18]/80 hover:text-[#1a1a18]";
-    topInfoClass = "text-[#1a1a18]/80";
+    muteButtonClass = "bg-[#202124] text-[var(--warn-solid)] hover:bg-black";
+    recalibrateButtonClass = "bg-[var(--warn-solid-2)] text-[#202124] hover:bg-[#e37400]";
+    linkClass = "text-[#202124] hover:text-black";
+    topInfoClass = "text-[#202124]";
   }
+
+  const alertWord = "leading-[0.95] font-semibold tracking-[-0.02em]";
+  const reasonText = "text-[clamp(24px,3.2vw,44px)] font-medium leading-tight";
 
   return (
     <main
-      className={`min-h-dvh flex flex-col justify-between p-6 select-none relative transition-colors duration-150 ${containerBg}`}
+      className={`min-h-dvh flex flex-col justify-between app-stagger px-[clamp(16px,3vw,32px)] pt-5 pb-4 select-none relative transition-colors duration-150 ${containerBg}`}
     >
       {/* Calibration Overlay */}
       {showCalibration && (
@@ -145,12 +104,12 @@ export function StatusScreen({ telemetry, connected }: StatusScreenProps) {
       )}
 
       {/* Top Header: Mute status & small risk score in corner */}
-      <header className="flex items-center justify-between w-full max-w-4xl mx-auto">
-        <div className={`text-[14px] font-medium ${topInfoClass}`}>
+      <header className="flex items-center justify-between gap-4 w-full">
+        <div className={`text-[16px] font-medium ${topInfoClass}`}>
           {isDisconnected ? "" : isMuted ? "Đã tắt tiếng" : ""}
         </div>
-        <div className={`text-[14px] font-medium tabular-nums ${topInfoClass}`}>
-          Rủi ro: {telemetry ? Math.round(telemetry.risk_score) : "--"}
+        <div className={`text-[16px] font-medium tabular-nums ${topInfoClass}`}>
+          Rủi ro {telemetry ? Math.round(telemetry.risk_score) : "--"}
         </div>
       </header>
 
@@ -158,34 +117,39 @@ export function StatusScreen({ telemetry, connected }: StatusScreenProps) {
       <section
         role={isDanger ? "alert" : "status"}
         aria-live={isDanger ? "assertive" : "polite"}
-        className="flex flex-col items-center justify-center text-center my-auto py-8 px-4 max-w-4xl mx-auto w-full"
+        className="flex flex-col items-center justify-center text-center my-auto py-8 w-full"
       >
         {isDisconnected ? (
-          <h2 className="text-[20px] font-semibold text-[var(--text)] tracking-tight">
-            Mất kết nối. Đang thử lại…
-          </h2>
+          <div className="flex flex-col items-center">
+            <h2 className="text-[clamp(28px,4vw,40px)] font-semibold tracking-tight">
+              Mất kết nối. Đang thử lại…
+            </h2>
+            <p className="text-[16px] text-[var(--text-muted)] mt-3 max-w-[40ch]">
+              Kiểm tra backend DriverGuard và camera trên máy này.
+            </p>
+          </div>
         ) : hasCameraError ? (
           <div className="flex flex-col items-center">
-            <h2 className="text-[28px] font-semibold text-[var(--warn)] tracking-tight">
+            <h2 className="text-[clamp(28px,4vw,40px)] font-semibold text-[var(--warn)] tracking-tight">
               Không mở được camera
             </h2>
-            <p className="text-[14px] text-[var(--text-muted)] mt-2">
-              Vui lòng kiểm tra cáp kết nối hoặc quyền truy cập camera.
+            <p className="text-[16px] text-[var(--text-muted)] mt-3 max-w-[44ch]">
+              Kiểm tra cáp camera, hoặc tắt ứng dụng khác đang dùng camera.
             </p>
           </div>
         ) : !telemetry ? (
-          <h2 className="text-[20px] font-medium text-[var(--text-muted)] tracking-tight">
+          <h2 className="text-[24px] font-medium text-[var(--text-muted)] tracking-tight">
             Đang chờ dữ liệu từ AI worker…
           </h2>
         ) : isDanger ? (
           <div className="flex flex-col items-center">
-            <div className="flex items-center justify-center gap-4 sm:gap-6 flex-wrap sm:flex-nowrap">
+            <div className="flex items-center justify-center gap-[clamp(16px,2vw,32px)] flex-wrap sm:flex-nowrap">
               <svg
-                className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 text-white"
+                className="w-[clamp(56px,8vw,120px)] h-[clamp(56px,8vw,120px)] shrink-0 text-white"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="4"
+                strokeWidth="3"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 aria-hidden="true"
@@ -194,17 +158,14 @@ export function StatusScreen({ telemetry, connected }: StatusScreenProps) {
                 <line x1="12" y1="9" x2="12" y2="13" />
                 <line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
-              <h2 className="text-[56px] sm:text-[72px] md:text-[96px] leading-none font-semibold text-white tracking-tight">
+              <h2 className={`app-pop text-[clamp(56px,11vw,176px)] text-white whitespace-nowrap ${alertWord}`}>
                 NGUY HIỂM
               </h2>
             </div>
             {reasons.length > 0 && (
-              <div className="mt-6 flex flex-col items-center gap-2">
+              <div className="mt-[clamp(20px,3vh,40px)] flex flex-col items-center gap-2">
                 {reasons.map((reason, idx) => (
-                  <span
-                    key={idx}
-                    className="text-[20px] sm:text-[28px] font-medium text-white"
-                  >
+                  <span key={idx} className={`${reasonText} text-white`}>
                     {reason}
                   </span>
                 ))}
@@ -213,16 +174,13 @@ export function StatusScreen({ telemetry, connected }: StatusScreenProps) {
           </div>
         ) : isWarning ? (
           <div className="flex flex-col items-center">
-            <h2 className="text-[56px] sm:text-[72px] md:text-[96px] leading-none font-semibold text-[#1a1a18] tracking-tight">
+            <h2 className={`app-pop text-[clamp(72px,14vw,220px)] text-[#202124] ${alertWord}`}>
               CHÚ Ý
             </h2>
             {reasons.length > 0 && (
-              <div className="mt-6 flex flex-col items-center gap-2">
+              <div className="mt-[clamp(20px,3vh,40px)] flex flex-col items-center gap-2">
                 {reasons.map((reason, idx) => (
-                  <span
-                    key={idx}
-                    className="text-[20px] sm:text-[28px] font-medium text-[#1a1a18]"
-                  >
+                  <span key={idx} className={`${reasonText} text-[#202124]`}>
                     {reason}
                   </span>
                 ))}
@@ -230,13 +188,13 @@ export function StatusScreen({ telemetry, connected }: StatusScreenProps) {
             )}
           </div>
         ) : (
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center app-fade">
             <div className="flex items-center justify-center gap-3">
               <span
-                className="w-[12px] h-[12px] bg-[var(--ok)] shrink-0 rounded-[2px]"
+                className="w-[14px] h-[14px] bg-[var(--ok)] shrink-0 rounded-[2px]"
                 aria-hidden="true"
               />
-              <span className="text-[20px] font-medium text-[var(--text-muted)]">
+              <span className="text-[24px] font-medium text-[var(--text-muted)]">
                 Đang theo dõi
               </span>
             </div>
@@ -245,7 +203,7 @@ export function StatusScreen({ telemetry, connected }: StatusScreenProps) {
                 {reasons.map((reason, idx) => (
                   <span
                     key={idx}
-                    className="text-[16px] font-medium text-[var(--text-muted)]"
+                    className="text-[18px] font-medium text-[var(--text-muted)]"
                   >
                     {reason}
                   </span>
@@ -257,8 +215,8 @@ export function StatusScreen({ telemetry, connected }: StatusScreenProps) {
       </section>
 
       {/* Bottom Controls */}
-      <footer className="flex flex-col items-center gap-3 w-full max-w-md mx-auto pb-2">
-        {/* Large Mute Button (min-h-16, h-16, rounded 8px) */}
+      <footer className="flex flex-col items-center gap-3 w-full max-w-[560px] mx-auto">
+        {/* Large mute button: the one control a driver may need, ≥ 64px */}
         <button
           type="button"
           onClick={handleMute}
@@ -268,33 +226,32 @@ export function StatusScreen({ telemetry, connected }: StatusScreenProps) {
               ? "Cảnh báo âm thanh đang được tắt tiếng trong 15 giây"
               : "Tắt tiếng cảnh báo trong 15 giây"
           }
-          className={`w-full h-16 min-h-[64px] text-[16px] sm:text-[20px] font-semibold rounded-[var(--radius-lg)] transition-opacity flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${muteButtonClass}`}
+          className={`w-full h-[72px] min-h-[64px] text-[20px] font-semibold rounded-full transition-colors flex items-center justify-center cursor-pointer active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${muteButtonClass}`}
         >
           {muting ? "Đang gửi…" : isMuted ? "Đã tắt tiếng" : "Tắt tiếng 15 giây"}
         </button>
 
-        {/* Recalibrate Button (min-h-12, h-12, outline) */}
         <button
           type="button"
           onClick={handleCalibrate}
           disabled={!connected || calibrating}
           aria-label="Hiệu chuẩn lại tư thế tài xế"
-          className={`h-12 min-h-[48px] px-6 rounded-[var(--radius-lg)] transition-opacity text-[14px] sm:text-[16px] font-medium flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${recalibrateButtonClass}`}
+          className={`h-12 min-h-[48px] px-6 rounded-full transition-colors text-[16px] font-medium flex items-center justify-center cursor-pointer active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${recalibrateButtonClass}`}
         >
           {calibrating ? "Đang gửi…" : "Hiệu chuẩn lại"}
         </button>
 
         {/* Link to /monitor and /camera */}
-        <div className="pt-1 flex flex-wrap items-center justify-center gap-2">
+        <div className="flex flex-wrap items-center justify-center gap-2">
           <Link
             href="/monitor"
-            className={`min-h-[48px] inline-flex items-center text-[14px] underline underline-offset-4 px-3 transition-colors ${linkClass}`}
+            className={`min-h-[48px] inline-flex items-center text-[16px] underline underline-offset-4 px-3 transition-colors ${linkClass}`}
           >
             Giám sát
           </Link>
           <Link
             href="/camera"
-            className={`min-h-[48px] inline-flex items-center text-[14px] underline underline-offset-4 px-3 transition-colors ${linkClass}`}
+            className={`min-h-[48px] inline-flex items-center text-[16px] underline underline-offset-4 px-3 transition-colors ${linkClass}`}
           >
             Camera
           </Link>

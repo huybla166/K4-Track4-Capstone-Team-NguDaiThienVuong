@@ -55,23 +55,23 @@ export function beepPattern(
     case "caution":
       return {
         frequencyHz: 660,
-        durationMs: 200,
-        intervalMs: 4000,
-        volume: 0.15,
+        durationMs: 250,
+        intervalMs: 2000,
+        volume: 0.45,
       };
     case "danger":
       return {
         frequencyHz: 880,
-        durationMs: 250,
+        durationMs: 300,
         intervalMs: 1000,
-        volume: 0.3,
+        volume: 0.7,
       };
     case "danger_escalated":
       return {
         frequencyHz: 1100,
         durationMs: 300,
         intervalMs: 500,
-        volume: 0.5,
+        volume: 0.9,
       };
     case "off":
     default:

@@ -21,6 +21,10 @@ export function activeReasons(t: Telemetry): string[] {
   if (!t.face_detected) {
     reasons.push("Không thấy khuôn mặt");
   }
+  // Mệt mỏi tích lũy tự đẩy màn hình lên CHÚ Ý (từ 40 điểm) dù không có hành vi tức thời nào
+  if ((t.chronic_risk ?? 0) >= 40) {
+    reasons.push("Mệt mỏi tích lũy");
+  }
 
   return reasons;
 }

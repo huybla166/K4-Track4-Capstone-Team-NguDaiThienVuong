@@ -64,6 +64,14 @@ function playBeep(
   }
 }
 
+/** Một tiếng bíp ngắn xác nhận âm thanh đã bật (gọi trong sự kiện bấm của người dùng). */
+export function playTestBeep(): void {
+  const ctx = getOrCreateAudioContext();
+  if (ctx) {
+    playBeep(ctx, { frequencyHz: 660, durationMs: 150, volume: 0.35 });
+  }
+}
+
 export function useAlertSound(stage: AlertStage, enabled: boolean): void {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 

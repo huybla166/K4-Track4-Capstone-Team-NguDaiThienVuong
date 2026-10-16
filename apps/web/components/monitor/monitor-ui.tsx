@@ -6,10 +6,30 @@ export const eventNames: Record<string, string> = {
   PHONE_USAGE: "Dùng điện thoại", DRIVER_ABSENCE: "Không thấy tài xế",
 };
 
+export const levelLabels: Record<RiskLevel, string> = { NORMAL: "Bình thường", WARNING: "Chú ý", DANGER: "Nguy hiểm" };
+
+export function toLevel(value: string): RiskLevel {
+  return value === "DANGER" ? "DANGER" : value === "WARNING" ? "WARNING" : "NORMAL";
+}
+
+/** Số thập phân kiểu Việt Nam: 0,19 */
+export function decimal(value: number, digits = 1): string {
+  return value.toFixed(digits).replace(".", ",");
+}
+
+export function LevelIcon({ level, size = 16 }: { level: RiskLevel; size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {level === "NORMAL" && <path d="M3.5 8.5 6.5 11.5 12.5 5" />}
+      {level === "WARNING" && <><circle cx="8" cy="8" r="6" /><path d="M8 4.8v3.8M8 11.2v.01" /></>}
+      {level === "DANGER" && <><path d="M7.1 2.6 1.6 12.2a1 1 0 0 0 .9 1.5h11a1 1 0 0 0 .9-1.5L8.9 2.6a1 1 0 0 0-1.8 0z" /><path d="M8 6.2v3.2M8 11.6v.01" /></>}
+    </svg>
+  );
+}
+
 export function LevelMark({ level }: { level: RiskLevel }) {
-  const label = { NORMAL: "Bình thường", WARNING: "Chú ý", DANGER: "Nguy hiểm" }[level];
-  return <span className={`monitor-level monitor-level-${level.toLowerCase()}`}>
-    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.7"/><text x="10" y="14" textAnchor="middle" fill="currentColor" fontSize="12" fontWeight="600">{level === "NORMAL" ? "✓" : level === "WARNING" ? "!" : "⚠"}</text></svg>
-    {label}
+  return <span className={`level-mark level-mark-${level.toLowerCase()}`}>
+    <LevelIcon level={level} />
+    {levelLabels[level]}
   </span>;
 }

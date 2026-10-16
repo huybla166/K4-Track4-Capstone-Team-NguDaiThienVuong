@@ -3,12 +3,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { API_URL } from "@/lib/api";
 import type { Telemetry, RiskLevel } from "@/types/telemetry";
-
-const RISK_LABELS: Record<RiskLevel, string> = {
-  NORMAL: "Bình thường",
-  WARNING: "Chú ý",
-  DANGER: "Nguy hiểm",
-};
+import { LevelMark } from "@/components/monitor/monitor-ui";
 
 const emptySubscribe = () => () => {};
 
@@ -144,19 +139,19 @@ export function LiveView({ telemetry, connected }: LiveViewProps) {
 
   const level: RiskLevel = telemetry?.risk_level ?? "NORMAL";
   const fpsCamera =
-    telemetry?.fps?.camera !== undefined ? telemetry.fps.camera.toFixed(1) : "—";
+    telemetry?.fps?.camera !== undefined ? telemetry.fps.camera.toFixed(1) : "–";
   const fpsFace =
-    telemetry?.fps?.face !== undefined ? telemetry.fps.face.toFixed(1) : "—";
+    telemetry?.fps?.face !== undefined ? telemetry.fps.face.toFixed(1) : "–";
   const fpsPhone =
-    telemetry?.fps?.phone !== undefined ? telemetry.fps.phone.toFixed(1) : "—";
+    telemetry?.fps?.phone !== undefined ? telemetry.fps.phone.toFixed(1) : "–";
   const latencyFace =
     telemetry?.latency_ms?.face !== undefined
       ? telemetry.latency_ms.face.toFixed(0)
-      : "—";
+      : "–";
   const latencyPhone =
     telemetry?.latency_ms?.phone !== undefined
       ? telemetry.latency_ms.phone.toFixed(0)
-      : "—";
+      : "–";
 
   return (
     <div className="camera-panel">
@@ -191,51 +186,30 @@ export function LiveView({ telemetry, connected }: LiveViewProps) {
         <div className="camera-metrics">
           {/* Mức rủi ro + điểm */}
           <div className="camera-metric-item">
-            <span className="camera-metric-label">Rủi ro:</span>
-            <span className={`camera-level camera-level-${level.toLowerCase()}`}>
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 20 20"
-                fill="none"
-                aria-hidden="true"
-              >
-                <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.7" />
-                <text
-                  x="10"
-                  y="14"
-                  textAnchor="middle"
-                  fill="currentColor"
-                  fontSize="12"
-                  fontWeight="600"
-                >
-                  {level === "NORMAL" ? "✓" : level === "WARNING" ? "!" : "⚠"}
-                </text>
-              </svg>
-              {RISK_LABELS[level]}
-            </span>
+            <span className="camera-metric-label">Rủi ro</span>
+            <LevelMark level={level} />
             <span className="camera-score tabular-nums">
-              {telemetry ? telemetry.risk_score.toFixed(0) : "—"}
+              {telemetry ? telemetry.risk_score.toFixed(0) : "–"}
             </span>
           </div>
 
           {/* FPS camera / mặt / điện thoại */}
           <div className="camera-metric-item">
-            <span className="camera-metric-label">FPS:</span>
+            <span className="camera-metric-label">FPS</span>
             <span className="tabular-nums">
               {telemetry
-                ? `${fpsCamera} cam · ${fpsFace} mặt · ${fpsPhone} đt`
-                : "—"}
+                ? `${fpsCamera} camera, ${fpsFace} mặt, ${fpsPhone} điện thoại`
+                : "–"}
             </span>
           </div>
 
           {/* Độ trễ mặt / điện thoại */}
           <div className="camera-metric-item">
-            <span className="camera-metric-label">Độ trễ:</span>
+            <span className="camera-metric-label">Độ trễ</span>
             <span className="tabular-nums">
               {telemetry
-                ? `${latencyFace} ms mặt · ${latencyPhone} ms đt`
-                : "—"}
+                ? `${latencyFace} ms mặt, ${latencyPhone} ms điện thoại`
+                : "–"}
             </span>
           </div>
         </div>
@@ -246,7 +220,7 @@ export function LiveView({ telemetry, connected }: LiveViewProps) {
             type="button"
             onClick={handleToggleFullscreen}
             aria-label={isFullscreen ? "Thoát toàn màn hình" : "Xem toàn màn hình"}
-            className="camera-button"
+            className="btn btn-quiet"
           >
             {isFullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}
           </button>

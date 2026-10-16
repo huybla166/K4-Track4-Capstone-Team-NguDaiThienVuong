@@ -1,7 +1,7 @@
 ear_threshold: 0.15        # EAR thấp hơn => mắt nhắm
 eyes_closed_s: 1.8         # nhắm mắt liên tục => DROWSINESS_ACUTE
 mar_threshold: 0.40        # MAR cao hơn => miệng mở rộng (ngáp); 0.50 -> 0.40 theo thí nghiệm 5
-yawn_s: 2.0
+yawn_s: 1.0             # 2.0 -> 1.0 (2026-10-16): ngáp thật 1,0-6,7 s, nói/cười tối đa 0,55 s (phiên 2-4)
 yaw_threshold: 30.0        # độ, so với tư thế chuẩn
 pitch_threshold: 20.0
 head_s: 2.0
@@ -20,3 +20,4 @@ pose_max_age_s: 0.6        # bỏ qua kết quả suy luận pose cũ hơn mức
 use_yawn_context: false    # EXP-012: luật ngáp rồi nhắm mắt, tắt mặc định
 yawn_context_window_s: 5.0
 yawn_context_eye_s: 0.8    # thời lượng nhắm mắt sau ngáp; mặc định mắt là 1.8 s
+use_chronic_fatigue: false # TẮT theo lệnh sếp 2026-10-16: mệt mỏi tích lũy (PERCLOS + ngáp) không tính điểm, không tạo sự kiện

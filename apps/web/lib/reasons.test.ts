@@ -97,3 +97,9 @@ test("activeReasons: maintains priority order with partial subsets of flags", ()
     "Không thấy khuôn mặt",
   ]);
 });
+
+test("activeReasons nêu mệt mỏi tích lũy khi điểm mãn tính từ 40", () => {
+  assert.deepEqual(activeReasons(makeTelemetry({ chronic_risk: 58 })), ["Mệt mỏi tích lũy"]);
+  assert.deepEqual(activeReasons(makeTelemetry({ chronic_risk: 30 })), []);
+  assert.deepEqual(activeReasons(makeTelemetry()), []);
+});

@@ -1,6 +1,8 @@
 """AI Worker: tiến trình riêng đọc camera, chạy pipeline, đẩy telemetry/khung hình cho backend."""
 
+import os
 import queue
+import sys
 import threading
 import time
 from dataclasses import replace
@@ -15,6 +17,10 @@ from ai.runtime.pipeline import DriverPipeline, FaceObservation, PhoneObservatio
 from ai.runtime.thresholds import load_thresholds
 
 MAX_TELEMETRY_HZ = 15
+# DirectShow chỉ có trên Windows; hệ khác để OpenCV tự chọn (macOS: AVFoundation)
+CAPTURE_API = cv2.CAP_DSHOW if sys.platform == "win32" else cv2.CAP_ANY
+# Lật ngang khung hình như soi gương (DRIVERGUARD_MIRROR=1). Phát hiện quay đầu dùng |yaw| nên không đổi kết quả.
+MIRROR = os.getenv("DRIVERGUARD_MIRROR", "0") == "1"
 LEVEL_COLOR = {"NORMAL": (80, 200, 80), "WARNING": (0, 200, 255), "DANGER": (60, 60, 240)}
 
 
@@ -188,7 +194,7 @@ def _run_camera(telemetry_q: Any, command_q: Any, frame_q: Any, config: dict) ->
         now = time.time()
         cmds.poll(now)
         if cap is None or not cap.isOpened():
-            cap = cv2.VideoCapture(int(config.get("camera_index", 0)), cv2.CAP_DSHOW)
+            cap = cv2.VideoCapture(int(config.get("camera_index", 0)), CAPTURE_API)
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
             if not cap.isOpened():
@@ -218,6 +224,8 @@ def _run_camera(telemetry_q: Any, command_q: Any, frame_q: Any, config: dict) ->
         if not ok:
             time.sleep(0.05)
             continue
+        if MIRROR:
+            frame = cv2.flip(frame, 1)
         cam_fps.tick(now)
         phone_thread.frame = frame
         if pose_thread.ident is not None:
